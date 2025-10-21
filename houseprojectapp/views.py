@@ -1,6 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
 from rest_framework import viewsets
 
 from houseprojectapp.utils.material_budget import get_material_budget
@@ -93,41 +92,6 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-# views.py
-
-# from adminapp.models import CategoryImage
-# class HouseSearchAPIView(APIView):
-#     def post(self, request):
-#         serializer = UserRequestSerializer(data=request.data)
-#         if serializer.is_valid():
-#             category = serializer.validated_data['category']
-#             cent = serializer.validated_data['cent']
-#             sqft = serializer.validated_data['sqft']
-#             expected_amount = serializer.validated_data['expected_amount']
-
-#             user_id = serializer.validated_data.get('user_id')
-#             user = tbl_register.objects.filter(id=user_id).first() if user_id else None
-
-#             # Save the request
-#             UserRequest.objects.create(
-#                 user=user,
-#                 category=category,
-#                 cent=cent,
-#                 sqft=sqft,
-#                 expected_amount=expected_amount
-#             )
-
-#             # Get images for the selected category
-#             matched_images = CategoryImage.objects.filter(category=category)
-
-#             result_serializer = CategoryImageSerializer(matched_images, many=True, context={'request': request})
-#             return Response({
-#                 'message': 'Submit successful',
-#                 'images': result_serializer.data
-#             }, status=status.HTTP_201_CREATED)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 
@@ -150,51 +114,6 @@ class GetImagesByRequestAPIView(APIView):
             "images": serializer.data
         }, status=status.HTTP_200_OK)
 
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework import status
-# from .serializers import UserRequestSerializer, HouseSerializer
-# from .models import UserRequest
-# from adminapp.models import Category, House
-# from houseprojectapp.models import tbl_register
-
-# class HouseSearchAPIView(APIView):
-#     def post(self, request):
-#         serializer = UserRequestSerializer(data=request.data)
-#         if serializer.is_valid():
-#             category = serializer.validated_data['category']
-#             cent = serializer.validated_data['cent']
-#             sqft = serializer.validated_data['sqft']
-#             expected_amount = serializer.validated_data['expected_amount']
-
-#             user_id = serializer.validated_data.get('user_id')
-#             user = tbl_register.objects.filter(id=user_id).first() if user_id else None
-
-#             # Save the request
-#             UserRequest.objects.create(
-#                 user=user,
-#                 category=category,
-#                 cent=cent,
-#                 sqft=sqft,
-#                 expected_amount=expected_amount
-#             )
-
-#             # Filter matching houses
-#             matched_houses = []
-#             for house in House.objects.filter(category=category):
-#                 try:
-#                     cent_min, cent_max = map(float, house.cent_range.split('-'))
-#                     sqft_min, sqft_max = map(float, house.sqft_range.split('-'))
-
-#                     if cent_min <= cent <= cent_max and sqft_min <= sqft <= sqft_max:
-#                         matched_houses.append(house)
-#                 except:
-#                     continue
-
-#             result_serializer = HouseSerializer(matched_houses, many=True, context={'request': request})
-#             return Response(result_serializer.data, status=status.HTTP_201_CREATED)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -205,77 +124,9 @@ from rest_framework import status
 from adminapp.models import House, Category
 from houseprojectapp.serializers import HouseSerializer
 
-# class HousePredictionView(APIView):                                                          
-#     def post(self, request):
-#         try:
-#             # Expecting 3 numeric inputs
-#             sqft = float(request.data.get('sqft'))
-#             cent = float(request.data.get('cent'))
-#             budget = float(request.data.get('budget'))
-
-#             # Call the ML prediction
-#             plan_type = predict_house_type([[sqft, cent, budget]])  # input as list of list
-#             material_data, total = get_material_budget(plan_type)
-
-#             return Response({
-#                 'predicted_plan': plan_type,
-#                 'total_estimated_budget': total,
-#                 'materials': material_data
-#             }, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-# class HousePredictionView(APIView):
-#     def post(self, request):
-#         try:
-#             sqft = float(request.data.get('sqft'))
-#             cent = float(request.data.get('cent'))
-#             budget = float(request.data.get('budget'))
-#             category_id = int(request.data.get('category_id'))  # Keep this for filtering only
-
-#             # ✅ Only send 3 features to the ML model
-#             plan_type = predict_house_type([[sqft, cent, budget]])
-
-#             # ✅ Material and budget based on plan
-#             material_data, total = get_material_budget(plan_type, sqft, cent)
-
-#             return Response({
-#                 'predicted_plan': plan_type,
-#                 'total_estimated_budget': total,
-#                 'materials': material_data,
-#                 'category_id': category_id  # optional: send back category
-#             }, status=status.HTTP_200_OK)
-
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
-# class HousePredictionView(APIView):
-#     def post(self, request):
-#         try:
-#             sqft = float(request.data.get('sqft'))
-#             cent = float(request.data.get('cent'))
-#             budget = float(request.data.get('budget'))
-#             category_id = int(request.data.get('category_id'))
-
-#             # Send all 4 features to the ML model
-#             plan_type = predict_house_type([[sqft, cent, budget, category_id]])
-
-#             # Material and budget based on plan
-#             material_data, total = get_material_budget(plan_type, sqft, cent)
-
-#             return Response({
-#                 'predicted_plan': plan_type,
-#                 'total_estimated_budget': total,
-#                 'materials': material_data,
-#                 'category_id': category_id
-#             }, status=status.HTTP_201_CREATED)  # Changed from 200 to 201
-
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 import joblib
 import os
@@ -471,7 +322,8 @@ class DownloadPredictionPDF(APIView):
             user_name = user_request.user.name if user_request.user else "Guest"
 
             # Predict plan type using model
-            plan_type = predict_house_type([[sqft, cent, budget, user_request.category.id]])
+            plan_type = predict_house_type([[cent, budget, user_request.category.id]])
+
 
             # Get materials using updated function
             material_data, total = get_material_budget(plan_type, cent)
@@ -520,55 +372,6 @@ class DownloadPredictionPDF(APIView):
             return Response({'error': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# class DownloadPredictionPDF(APIView):
-#     def post(self, request):
-#         try:
-#             # Extract input
-#             sqft = float(request.data.get('sqft'))
-#             cent = float(request.data.get('cent'))
-#             budget = float(request.data.get('budget'))
-#             category_id = int(request.data.get('category_id'))
-
-#             # Predict
-#             plan_type = predict_house_type([[sqft, cent, budget, category_id]])
-#             material_data, total = get_material_budget(plan_type, sqft, cent)
-
-#             # Create in-memory PDF
-#             buffer = BytesIO()
-#             p = canvas.Canvas(buffer)
-
-#             p.drawString(50, 800, "🏠 House Plan Prediction Report")
-#             p.drawString(50, 780, f"Plan Type: {plan_type}")
-#             p.drawString(50, 760, f"Total Estimated Budget: ₹{total}")
-#             p.drawString(50, 740, f"Category ID: {category_id}")
-#             p.drawString(50, 720, f"Sqft: {sqft} | Cent: {cent} | Budget: ₹{budget}")
-
-#             y = 700
-#             for section, materials in material_data.items():
-#                 if not materials:
-#                     continue
-#                 y -= 20
-#                 p.drawString(50, y, f"🔹 {section}")
-#                 for m in materials:
-#                     y -= 15
-#                     line = f"   • {m['item']} - Qty: {m['quantity']}, Rate: ₹{m['rate']}, Total: ₹{m['total']}"
-#                     p.drawString(60, y, line)
-#                     if y < 100:
-#                         p.showPage()
-#                         y = 800
-
-#             p.showPage()
-#             p.save()
-#             buffer.seek(0)
-
-#             return HttpResponse(buffer, content_type='application/pdf', headers={
-#                 'Content-Disposition': 'attachment; filename="house_prediction_report.pdf"'
-#             })
-
-#         except Exception as e:
-#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # cart/views.py
@@ -875,3 +678,44 @@ class EngineerWorkDetailAPIView(APIView):
 
         serializer = WorkReadSerializer(work, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import UserRequest
+from .serializers import UserRequestSerializer
+from houseprojectapp.models import tbl_register  # your user model
+
+class UserRequestsByUserView(APIView):
+    def get(self, request, user_id):
+        try:
+            user = tbl_register.objects.get(id=user_id)
+        except tbl_register.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        user_requests = UserRequest.objects.filter(user=user)
+        serializer = UserRequestSerializer(user_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+#Engineer booking
+
+
+from rest_framework import viewsets
+from .models import EngineerBooking
+from .serializers import EngineerBookingSerializer, EngineerBookingReadSerializer
+
+class EngineerBookingViewSet(viewsets.ModelViewSet):
+    queryset = EngineerBooking.objects.all()
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return EngineerBookingReadSerializer
+        return EngineerBookingSerializer

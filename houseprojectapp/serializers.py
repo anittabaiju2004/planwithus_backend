@@ -389,3 +389,35 @@ class EngineerRequestReadSerializer(serializers.ModelSerializer):
 
     def get_suggestion(self, obj):
         return obj.suggestion.url if obj.suggestion else None
+
+
+
+
+
+from rest_framework import serializers
+from .models import EngineerBooking
+
+class EngineerBookingSerializer(serializers.ModelSerializer):
+    # Make these read-only because they are auto-copied from UserRequest
+    cent = serializers.CharField(read_only=True)
+    sqft = serializers.CharField(read_only=True)
+    expected_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = EngineerBooking
+        fields = '__all__'
+
+
+class EngineerBookingReadSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_phone = serializers.CharField(source='user.phone', read_only=True)
+    engineer_name = serializers.CharField(source='engineer.name', read_only=True)
+    engineer_phone = serializers.CharField(source='engineer.phone', read_only=True)
+
+    class Meta:
+        model = EngineerBooking
+        fields = [
+            'id', 'user_name', 'user_phone', 'engineer_name', 'engineer_phone',
+            'address', 'start_date', 'end_date', 'suggestion',
+            'cent', 'sqft', 'expected_amount', 'created_at'
+        ]

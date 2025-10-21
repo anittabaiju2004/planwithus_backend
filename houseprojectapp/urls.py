@@ -27,6 +27,7 @@ router.register(r'engineer', EngineerViewSet, basename='engineer')
 router.register(r'payments', PaymentViewSet, basename='payment')
 router.register(r'works', WorkViewSet, basename='works')
 router.register(r'engineer-requests', EngineerRequestViewSet, basename='engineer-request')
+router.register(r'engineer-booking',EngineerBookingViewSet,basename='booking')
 
 
 urlpatterns = [
@@ -71,6 +72,9 @@ urlpatterns = [
    path('place-order/', views.place_order, name='place_order'),
    # path('generate-house-image/', GenerateHouseImageAPIView.as_view(), name='generate-house-image'),
    path('engineers/<int:engineer_id>/works/<int:work_id>/', EngineerWorkDetailAPIView.as_view(), name='engineer-work-detail'),
+   
 
+
+   path('user-requests/<int:user_id>/', UserRequestsByUserView.as_view(), name='user-requests-by-user'),
 ]
 

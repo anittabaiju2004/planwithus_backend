@@ -27,19 +27,29 @@ def index(request):
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import tbl_admin  # make sure tbl_admin exists
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import tbl_admin
 
 def login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
+
         try:
+            # Try to fetch the admin with matching email and password
             admin = tbl_admin.objects.get(email=email, password=password)
+            # Save admin id in session
             request.session['admin_id'] = admin.id
-            return render(request, 'adminapp/index.html')  # on successful login
+            # Redirect to admin index page
+            return redirect('index')  # Use the URL name for index page
         except tbl_admin.DoesNotExist:
+            # Show error message
             messages.error(request, 'Invalid email or password')
-            return render(request, 'adminapp/login.html')  # on error
-    return render(request, 'adminapp/login.html')  # for GET request
+
+    # For GET request or failed login
+    return render(request, 'adminapp/login.html')
+
 from django.shortcuts import redirect
 
 def logout_view(request):

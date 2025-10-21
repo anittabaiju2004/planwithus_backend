@@ -180,7 +180,6 @@ class WorkImage(models.Model):
     def __str__(self):
         return f"Image for {self.work.project_name}"
 
-
 # models.py
 from django.db import models
 from .models import tbl_register, tbl_engineer, UserRequest
@@ -209,3 +208,38 @@ class EngineerRequest(models.Model):
         user_name = getattr(self.user, 'name', 'Unknown user')
         engineer_name = getattr(self.engineer, 'name', 'Unknown engineer')
         return f"Request from {user_name} to {engineer_name}"
+
+
+
+
+
+
+from django.db import models
+from .models import tbl_register, tbl_engineer, UserRequest
+
+class EngineerBooking(models.Model):
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE, related_name="engineer_bookings")
+    engineer = models.ForeignKey(tbl_engineer, on_delete=models.CASCADE, related_name="bookings")
+    user_request = models.ForeignKey(UserRequest, on_delete=models.CASCADE, related_name="bookings", null=True, blank=True)
+
+    address = models.CharField(max_length=255, null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    suggestion = models.FileField(upload_to="engineer_suggestions/", null=True, blank=True)
+
+    cent = models.CharField(max_length=50, null=True, blank=True)
+    sqft = models.CharField(max_length=50, null=True, blank=True)
+    expected_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Automatically copy fields from linked UserRequest if available
+        if self.user_request:
+            self.cent = self.user_request.cent
+            self.sqft = self.user_request.sqft
+            self.expected_amount = self.user_request.expected_amount
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Booking by {self.user.name} for {self.engineer.name}"
