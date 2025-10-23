@@ -9,7 +9,7 @@ from .serializers import CategoryImageSerializer, EngineerSerializer, UserReques
 from .serializers import RegisterSerializer
 from rest_framework.response import Response
 from rest_framework import status
-
+#register user
 class RegisterViewSet(viewsets.ModelViewSet):
     queryset = tbl_register.objects.all()
     serializer_class = RegisterSerializer
@@ -26,7 +26,7 @@ class RegisterViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+#register engineer
 class EngineerViewSet(viewsets.ModelViewSet):
     queryset = tbl_engineer.objects.all()
     serializer_class = EngineerSerializer
@@ -44,7 +44,7 @@ class EngineerViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 from rest_framework.views import APIView
-
+#login as engineer and  user
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
         user_type = request.data.get('user_type')  # 'engineer' or 'user'
@@ -95,7 +95,7 @@ class LoginView(APIView):
 
 
 
-
+#get images
 class GetImagesByRequestAPIView(APIView):
     def get(self, request, request_id):
         try:
@@ -115,7 +115,7 @@ class GetImagesByRequestAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-
+#predict house
 
 from houseprojectapp.utils.predict_plan import predict_house_type
 from houseprojectapp.utils.predict_plan import predict_house_type
@@ -200,6 +200,9 @@ class HousePredictionView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+
+#view engineer profile
 # views.py
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -219,6 +222,10 @@ def engineer_profile(request, engineer_id):
     serializer = EngineerProfileSerializer(engineer)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
+
+#update engineer profile
 @api_view(['PUT', 'PATCH'])
 def update_engineer_profile(request, engineer_id):
     try:
@@ -233,7 +240,7 @@ def update_engineer_profile(request, engineer_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
+#update availability status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -254,6 +261,8 @@ def update_availability(request, engineer_id):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+#View categories
 from rest_framework.generics import ListAPIView
 from .models import Category
 from .serializers import CategorySerializer
@@ -262,6 +271,9 @@ class CategoryListView(ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+
+
+#view houses
 from rest_framework.generics import ListAPIView
 from adminapp.models import CategoryImage
 from .serializers import CategoryImageSerializer
@@ -271,7 +283,7 @@ class HouseListView(ListAPIView):
     serializer_class = CategoryImageSerializer
 
 
-
+#view product categories and products
 from rest_framework.generics import ListAPIView
 from adminapp.models import ProductCategory,Products
 from .serializers import ProductCategorySerializer, productSerializer
@@ -299,7 +311,7 @@ def get_products_by_category(request, category_id):
     serializer = productSerializer(products, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+#DOWNLOAD PREDICTION AS PDF
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -533,8 +545,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-
-# houseprojectapp/views.py
+# ENGINEER ADD WORKS
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Work
@@ -554,7 +565,7 @@ class WorkViewSet(viewsets.ModelViewSet):
 
 
 
-
+#LIST OF HOUSE FEATURES
 from adminapp.models import HouseFeature
 from .serializers import HouseFeatureSerializer
 class HouseFeatureListView(ListAPIView):
@@ -567,29 +578,28 @@ class HouseFeatureListView(ListAPIView):
 
 
 
-# views.py
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from .models import EngineerRequest
-from .serializers import EngineerRequestSerializer, EngineerRequestReadSerializer
-# views.py
-from rest_framework import viewsets
-from .models import EngineerRequest
-from .serializers import EngineerRequestSerializer, EngineerRequestReadSerializer
+# # views.py
+# from rest_framework import viewsets, status
+# from rest_framework.response import Response
+# from .models import EngineerRequest
+# from .serializers import EngineerRequestSerializer, EngineerRequestReadSerializer
+# # views.py
+# from rest_framework import viewsets
+# from .models import EngineerRequest
+# from .serializers import EngineerRequestSerializer, EngineerRequestReadSerializer
 
-class EngineerRequestViewSet(viewsets.ModelViewSet):
-    queryset = EngineerRequest.objects.all()
+# class EngineerRequestViewSet(viewsets.ModelViewSet):
+#     queryset = EngineerRequest.objects.all()
 
-    def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
-            # For GET requests → show expanded data
-            return EngineerRequestReadSerializer
-        # For POST/PUT/PATCH → show form with file field
-        return EngineerRequestSerializer
+#     def get_serializer_class(self):
+#         if self.action in ['list', 'retrieve']:
+#             # For GET requests → show expanded data
+#             return EngineerRequestReadSerializer
+#         # For POST/PUT/PATCH → show form with file field
+#         return EngineerRequestSerializer
 
 
-
-# houseprojectapp/views.py
+#GET HOUSES BY REQUEST(CENT, SQFT, EXPECTED AMOUNT) BY USER
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -634,8 +644,7 @@ class HouseSearchAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-# houseprojectapp/views.py
+#GET WORKS BY ENGINEER
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -658,8 +667,7 @@ def get_works_by_engineer(request, engineer_id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
-# houseprojectapp/views.py
+#VIEW FOR GET WORK DETAIL BY ENGINEER AND WORK ID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -680,8 +688,7 @@ class EngineerWorkDetailAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
-# views.py
+#USER REQUESTS BY USER ID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -719,3 +726,77 @@ class EngineerBookingViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return EngineerBookingReadSerializer
         return EngineerBookingSerializer
+
+#ENGINEER VIEW BOOKINGS
+
+class EngineerViewBooking(APIView):
+    def get(self, request, engineer_id):
+        """
+        Return all bookings assigned to a specific engineer.
+        """
+        bookings = EngineerBooking.objects.filter(engineer_id=engineer_id).order_by('-created_at')
+        serializer = EngineerBookingReadSerializer(bookings, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+#ENGINEER UPDATE BOOKING STATUS
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import EngineerBooking
+
+class EngineerUpdateStatus(APIView):
+    def patch(self, request, booking_id):
+        """
+        Engineers can update booking status only.
+        Example statuses: accepted, work_started, completed, rejected
+        """
+        try:
+            booking = EngineerBooking.objects.get(id=booking_id)
+        except EngineerBooking.DoesNotExist:
+            return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        new_status = request.data.get("status")
+        if not new_status:
+            return Response({"error": "Status field is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update only the status
+        booking.status = new_status
+        booking.save()
+
+        return Response({"message": "Status updated successfully", "new_status": booking.status}, status=status.HTTP_200_OK)
+
+
+
+#FEEDBACK VIEWSET
+from rest_framework import viewsets
+from .models import Feedback
+from .serializers import FeedbackSerializer
+
+class FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = Feedback.objects.all().order_by('-created_at')
+    serializer_class = FeedbackSerializer
+
+
+
+
+
+#ENGINEER VIEW FEEDBACKS
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Feedback
+from .serializers import FeedbackSerializer
+
+class EngineerViewFeedback(APIView):
+    """
+    GET /engineer/view-feedback/<engineer_id>/
+    Returns all feedback entries for a specific engineer.
+    """
+    def get(self, request, engineer_id):
+        feedbacks = Feedback.objects.filter(engineer_id=engineer_id).order_by('-created_at')
+        if not feedbacks.exists():
+            return Response({"message": "No feedback found for this engineer"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = FeedbackSerializer(feedbacks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -230,7 +230,7 @@ class EngineerBooking(models.Model):
     cent = models.CharField(max_length=50, null=True, blank=True)
     sqft = models.CharField(max_length=50, null=True, blank=True)
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-
+    status=models.CharField(max_length=50, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -243,3 +243,15 @@ class EngineerBooking(models.Model):
 
     def __str__(self):
         return f"Booking by {self.user.name} for {self.engineer.name}"
+
+
+
+class Feedback(models.Model):
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
+    engineer = models.ForeignKey(tbl_engineer, on_delete=models.CASCADE)
+    rating = models.IntegerField()
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Feedback by {self.user.name} for {self.engineer.name}"

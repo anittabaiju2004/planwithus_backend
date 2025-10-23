@@ -24,14 +24,17 @@ schema_view = get_schema_view(
 router = DefaultRouter()
 router.register(r'register', RegisterViewSet, basename='register')
 router.register(r'engineer', EngineerViewSet, basename='engineer')
-router.register(r'payments', PaymentViewSet, basename='payment')
+# router.register(r'payments', PaymentViewSet, basename='payment')
 router.register(r'works', WorkViewSet, basename='works')
-router.register(r'engineer-requests', EngineerRequestViewSet, basename='engineer-request')
-router.register(r'engineer-booking',EngineerBookingViewSet,basename='booking')
+# router.register(r'engineer-requests', EngineerRequestViewSet, basename='engineer-request')
+router.register(r'book_engineer',EngineerBookingViewSet,basename='book_engineer')
+router.register(r'feedback', FeedbackViewSet, basename='feedback')
 
 
 urlpatterns = [
    path('', include(router.urls)),
+
+   
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
@@ -76,5 +79,16 @@ urlpatterns = [
 
 
    path('user-requests/<int:user_id>/', UserRequestsByUserView.as_view(), name='user-requests-by-user'),
+
+
+
+
+   path('engineer_bookings/<int:engineer_id>/', EngineerViewBooking.as_view(), name='engineer-view-bookings'),
+
+
+   path('engineer_update_status/<int:booking_id>/', EngineerUpdateStatus.as_view(), name='engineer-update-status'),
+
+
+   path('engineer/view-feedback/<int:engineer_id>/', EngineerViewFeedback.as_view(), name='engineer-view-feedback'),
 ]
 

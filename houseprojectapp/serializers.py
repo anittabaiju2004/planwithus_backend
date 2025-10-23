@@ -344,51 +344,51 @@ class HouseFeatureSerializer(serializers.ModelSerializer):
 
 
 
-# serializers.py
-from rest_framework import serializers
-from .models import EngineerRequest, UserRequest, tbl_register, tbl_engineer
+# # serializers.py
+# from rest_framework import serializers
+# from .models import EngineerRequest, UserRequest, tbl_register, tbl_engineer
 
-# serializers.py
-class EngineerRequestSerializer(serializers.ModelSerializer):
-    suggestion = serializers.FileField(required=False, allow_null=True)
+# # serializers.py
+# class EngineerRequestSerializer(serializers.ModelSerializer):
+#     suggestion = serializers.FileField(required=False, allow_null=True)
 
-    class Meta:
-        model = EngineerRequest
-        fields = [
-            "id", "user", "engineer", "user_request",
-            "start_date", "end_date", "suggestion", "status"
-        ]
+#     class Meta:
+#         model = EngineerRequest
+#         fields = [
+#             "id", "user", "engineer", "user_request",
+#             "start_date", "end_date", "suggestion", "status"
+#         ]
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        if instance.suggestion:
-            rep['suggestion'] = instance.suggestion.url  # returns /media/suggestions/...
-        return rep
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+#         if instance.suggestion:
+#             rep['suggestion'] = instance.suggestion.url  # returns /media/suggestions/...
+#         return rep
 
-class EngineerRequestReadSerializer(serializers.ModelSerializer):
-    # expand user info
-    name = serializers.CharField(source="user.name", read_only=True)
-    phone = serializers.CharField(source="user.phone", read_only=True)
-    address = serializers.CharField(source="user.address", read_only=True)
+# class EngineerRequestReadSerializer(serializers.ModelSerializer):
+#     # expand user info
+#     name = serializers.CharField(source="user.name", read_only=True)
+#     phone = serializers.CharField(source="user.phone", read_only=True)
+#     address = serializers.CharField(source="user.address", read_only=True)
 
-    # expand request info
-    cent = serializers.FloatField(source="user_request.cent", read_only=True)
-    sqft = serializers.FloatField(source="user_request.sqft", read_only=True)
-    expected_amount = serializers.DecimalField(source="user_request.expected_amount", max_digits=12, decimal_places=2, read_only=True)
+#     # expand request info
+#     cent = serializers.FloatField(source="user_request.cent", read_only=True)
+#     sqft = serializers.FloatField(source="user_request.sqft", read_only=True)
+#     expected_amount = serializers.DecimalField(source="user_request.expected_amount", max_digits=12, decimal_places=2, read_only=True)
 
-    suggestion = serializers.SerializerMethodField()
+#     suggestion = serializers.SerializerMethodField()
 
-    class Meta:
-        model = EngineerRequest
-        fields = [
-            "id", "user", "engineer",
-            "name", "phone", "address",
-            "cent", "sqft", "expected_amount",
-            "start_date", "end_date", "suggestion", "status"
-        ]
+#     class Meta:
+#         model = EngineerRequest
+#         fields = [
+#             "id", "user", "engineer",
+#             "name", "phone", "address",
+#             "cent", "sqft", "expected_amount",
+#             "start_date", "end_date", "suggestion", "status"
+#         ]
 
-    def get_suggestion(self, obj):
-        return obj.suggestion.url if obj.suggestion else None
+#     def get_suggestion(self, obj):
+#         return obj.suggestion.url if obj.suggestion else None
 
 
 
@@ -396,9 +396,10 @@ class EngineerRequestReadSerializer(serializers.ModelSerializer):
 
 from rest_framework import serializers
 from .models import EngineerBooking
+from rest_framework import serializers
+from .models import EngineerBooking
 
 class EngineerBookingSerializer(serializers.ModelSerializer):
-    # Make these read-only because they are auto-copied from UserRequest
     cent = serializers.CharField(read_only=True)
     sqft = serializers.CharField(read_only=True)
     expected_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
@@ -419,5 +420,35 @@ class EngineerBookingReadSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user_name', 'user_phone', 'engineer_name', 'engineer_phone',
             'address', 'start_date', 'end_date', 'suggestion',
-            'cent', 'sqft', 'expected_amount', 'created_at'
+            'cent', 'sqft', 'expected_amount', 'created_at', 'status'
         ]
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if instance.suggestion:
+            # Always return just the relative media path
+            rep['suggestion'] = instance.suggestion.url
+        return rep
+
+
+
+from rest_framework import serializers
+from .models import Feedback
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    engineer_name = serializers.CharField(source='engineer.name', read_only=True)
+
+    class Meta:
+        model = Feedback
+        fields = [
+            'id',
+            'user',
+            'engineer',
+            'user_name',
+            'engineer_name',
+            'rating',
+            'comments',
+            'created_at'
+        ]
+        read_only_fields = ['created_at']
