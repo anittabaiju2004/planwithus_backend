@@ -435,3 +435,49 @@ def manage_features(request, action=None, feature_id=None):
     # LIST all features
     features = HouseFeature.objects.all()
     return render(request, 'adminapp/manage_features.html', {'features': features})
+
+
+
+
+
+from django.shortcuts import render
+# from django.contrib.admin.views.decorators import staff_member_required
+from houseprojectapp.models import (
+    ProductBookings, Cart, Upi, Card, CartUpi, CartCard
+)
+
+# @staff_member_required
+def admin_all_bookings(request):
+    # Product bookings with payment type
+    product_bookings_list = []
+    for item in ProductBookings.objects.select_related('user', 'product', 'category').all().order_by('-booking_date'):
+        if hasattr(item, 'upi'):
+            payment_type = 'UPI'
+        elif hasattr(item, 'card'):
+            payment_type = 'Card'
+        else:
+            payment_type = 'Pending'
+        product_bookings_list.append({
+            'booking': item,
+            'payment_type': payment_type
+        })
+
+    # Cart bookings with payment type
+    cart_bookings_list = []
+    for item in Cart.objects.select_related('user', 'product', 'category').all().order_by('-created_at'):
+        if CartUpi.objects.filter(user=item.user).exists():
+            payment_type = 'UPI'
+        elif CartCard.objects.filter(user=item.user).exists():
+            payment_type = 'Card'
+        else:
+            payment_type = 'Pending'
+        cart_bookings_list.append({
+            'booking': item,
+            'payment_type': payment_type
+        })
+
+    context = {
+        'product_bookings_list': product_bookings_list,
+        'cart_bookings_list': cart_bookings_list
+    }
+    return render(request, 'adminapp/admin_all_bookings.html', context)

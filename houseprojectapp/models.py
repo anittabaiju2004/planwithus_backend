@@ -48,99 +48,6 @@ class UserRequest(models.Model):
         category_name = getattr(self.category, 'name', 'Unknown category')
         return f"{user_name} request - {category_name}"
     
-
-
-
-
-# cart/models.py
-
-from django.db import models
-from adminapp.models import Products  # Your product model
-from houseprojectapp.models import tbl_register  # Your user model
-
-
-class Cart(models.Model):
-    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Cart of {self.user.name}"
-
-
-class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Products, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
-
-    def __str__(self):
-        return f"{self.quantity} x {self.product.name}"
-
-    def get_total_price(self):
-        return self.product.price * self.quantity
-
-
-# order/models.py
-from django.db import models
-from .models import tbl_register
-from adminapp.models import Products,HouseFeature
-
-class Order(models.Model):
-    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, default='Completed')  # Pending, Completed, Cancelled
-    address = models.TextField()
-    payment_status = models.CharField(max_length=20, default='Unpaid')  # Unpaid, Paid
-
-    def __str__(self):
-        return f"Order {self.id} by {self.user.name}"
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Products, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=2)  # store price at the time of order
-
-    def __str__(self):
-        return f"{self.quantity} x {self.product.name} (Order {self.order.id})"
-
-    def get_total_price(self):
-        return self.price * self.quantity
-
-# payment/models.py
-from django.db import models
-from .models import Order
-from houseprojectapp.models import tbl_register
-
-class Payment(models.Model):
-    PAYMENT_CHOICES = [
-        ('COD', 'Cash on Delivery'),
-        ('UPI', 'UPI Payment'),
-        ('CARD', 'Card Payment'),
-    ]
-
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
-    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
-    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # UPI
-    upi_id = models.CharField(max_length=100, blank=True, null=True)
-
-    # Card
-    card_number = models.CharField(max_length=20, blank=True, null=True)
-    cardholder_name = models.CharField(max_length=100, blank=True, null=True)
-    expiry_date = models.CharField(max_length=7, blank=True, null=True)  # MM/YYYY
-    cvv = models.CharField(max_length=4, blank=True, null=True)
-
-    payment_status = models.CharField(max_length=20, default="Paid")  # Pending, Paid, Failed
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Payment for Order {self.order.id} - {self.payment_method}"
-
-
 # houseprojectapp/models.py
 from django.db import models
 from adminapp.models import Category, HouseFeature
@@ -212,10 +119,7 @@ class EngineerRequest(models.Model):
 
 
 
-
-
-from django.db import models
-from .models import tbl_register, tbl_engineer, UserRequest
+from adminapp.models import HouseFeature  # import your HouseFeature model
 
 class EngineerBooking(models.Model):
     user = models.ForeignKey(tbl_register, on_delete=models.CASCADE, related_name="engineer_bookings")
@@ -230,11 +134,14 @@ class EngineerBooking(models.Model):
     cent = models.CharField(max_length=50, null=True, blank=True)
     sqft = models.CharField(max_length=50, null=True, blank=True)
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    status=models.CharField(max_length=50, default='pending')
+    status = models.CharField(max_length=50, default='pending')
+    
+    # Add features field
+    features = models.ManyToManyField(HouseFeature, blank=True, related_name="bookings")
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Automatically copy fields from linked UserRequest if available
         if self.user_request:
             self.cent = self.user_request.cent
             self.sqft = self.user_request.sqft
@@ -255,3 +162,113 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"Feedback by {self.user.name} for {self.engineer.name}"
+    
+
+
+
+
+
+
+
+#Cart and Orders models can be added 
+from adminapp.models import ProductCategory, Products
+from houseprojectapp.models import tbl_register
+# Product Bookings
+class ProductBookings(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("paid", "Paid"),
+        ("assigned", "Assigned"),
+        ("completed", "Completed"),
+        ("user_meet", "User Met"),
+        ("make_payment", "Payment Made"),
+        ("user_leave", "User Left from Shop"),
+    ]
+
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE)  # Added category
+    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=100, default='pending')
+    booking_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Booking - {self.product.name} by {self.user.name}"
+
+
+# Checkout for bookings
+class Checkout(models.Model):
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
+    booking = models.ForeignKey(ProductBookings, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+# Cart
+class Cart(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("paid", "Paid"),
+        ("assigned", "Assigned"),
+        ("completed", "Completed"),
+        ("user_meet", "User Met"),
+        ("full paid", "Full Paid"),
+    ]
+
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE)  # Added category
+    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=100, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+# Cart Checkout
+class CartCheckout(models.Model):
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE)
+    booking = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+# Payment models
+class Upi(models.Model):
+    booking = models.OneToOneField(ProductBookings, on_delete=models.CASCADE, related_name="upi")
+    status = models.CharField(max_length=20, default="success")
+    upi_id = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"UPI Payment for Booking {self.booking.id} - {self.status}"
+
+
+class Card(models.Model):
+    booking = models.OneToOneField(ProductBookings, on_delete=models.CASCADE, related_name="card")
+    status = models.CharField(max_length=20, default="success")
+    card_holder_name = models.CharField(max_length=100)
+    card_number = models.CharField(max_length=16)
+    expiry_date = models.CharField(max_length=7)
+    cvv = models.CharField(max_length=4)
+
+    def __str__(self):
+        return f"Card Payment for Booking {self.booking.id} - {self.status}"
+
+
+class CartUpi(models.Model):
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE, related_name="upi_payments")
+    status = models.CharField(max_length=20, default="success")
+    upi_id = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"UPI Payment by User {self.user.id} - {self.status}"
+
+
+class CartCard(models.Model):
+    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE, related_name="card_payments")
+    status = models.CharField(max_length=20, default="success")
+    card_holder_name = models.CharField(max_length=100)
+    card_number = models.CharField(max_length=16)
+    expiry_date = models.CharField(max_length=7)
+    cvv = models.CharField(max_length=4)
+
+    def __str__(self):
+        return f"Card Payment by User {self.user.id} - {self.status}"

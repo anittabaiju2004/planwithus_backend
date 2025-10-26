@@ -7,6 +7,18 @@ from rest_framework.routers import DefaultRouter
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+from .views import (
+    ProductBookingView,
+    CheckoutView,
+    PaymentListViewSet,  # ✅ Make sure this is imported
+    CartView,
+    CartCheckoutViewSet,
+    CartSummaryView,
+    ViewCartItems,
+    RemoveCartView,
+    CartUpiPaymentView,
+    CartCardPaymentView,
+)
 
 from houseprojectapp.views import *
 
@@ -29,6 +41,31 @@ router.register(r'works', WorkViewSet, basename='works')
 # router.register(r'engineer-requests', EngineerRequestViewSet, basename='engineer-request')
 router.register(r'book_engineer',EngineerBookingViewSet,basename='book_engineer')
 router.register(r'feedback', FeedbackViewSet, basename='feedback')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.register(r'product-bookings', ProductBookingView, basename='product-booking')
+router.register(r'checkout', CheckoutView, basename='checkout')
+router.register(r'cart', CartView, basename='cart')
+# router.register(r'cart-checkout', CartCheckoutView, basename='cart-checkout')
+router.register(r'cart-checkout', CartCheckoutViewSet, basename='cart-checkout')
+
+router.register(r'cart-upi-payment', CartUpiPaymentView, basename='cart-upi-payment')
+router.register(r'cart-card-payment', CartCardPaymentView, basename='cart-card-payment')
 
 
 urlpatterns = [
@@ -69,11 +106,7 @@ urlpatterns = [
    path('engineer_works/<int:engineer_id>/', views.get_works_by_engineer, name='works-by-engineer'),
 
    
-   path('add-to-cart/', AddToCartAPIView.as_view(), name='add-to-cart'),
-   path('view-cart/<int:user_id>/', ViewCartAPIView.as_view(), name='view-cart'),
-   path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
-   path('place-order/', views.place_order, name='place_order'),
-   # path('generate-house-image/', GenerateHouseImageAPIView.as_view(), name='generate-house-image'),
+  
    path('engineers/<int:engineer_id>/works/<int:work_id>/', EngineerWorkDetailAPIView.as_view(), name='engineer-work-detail'),
    
 
@@ -90,5 +123,27 @@ urlpatterns = [
 
 
    path('engineer/view-feedback/<int:engineer_id>/', EngineerViewFeedback.as_view(), name='engineer-view-feedback'),
+
+
+
+   path('requests/<int:user_id>/<int:request_id>/', UserRequestDetailByUserView.as_view(), name='user-request-detail-by-user'),
+
+
+   path('payment-details/', PaymentListViewSet.as_view({'get': 'list'}), name='payment-details'),
+
+    # Cart specific endpoints 
+    path('cart-summary/', CartSummaryView.as_view({'get': 'list'}), name='cart-summary'),
+    path('view-cart-items/', ViewCartItems.as_view(), name='view-cart-items'),
+    path('remove-cart-item/', RemoveCartView.as_view(), name='remove-cart-item'),
+
+
+
+      # path('product-booking/', ProductBookingView.as_view({'post': 'create'}), name='product-booking'),
+      # path('product-booking/', ProductBookingView.as_view({'post': 'create'}), name='product-booking'),
+
+       path('upi-payment/', UpiPaymentView.as_view({'post': 'create'}), name='upi-payment'),
+   path('card-payment/', CardPaymentView.as_view({'post': 'create'}), name='card-payment'),
+
+
 ]
 

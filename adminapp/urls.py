@@ -26,4 +26,7 @@ urlpatterns = [
     path('features/add/', views.manage_features, {'action': 'add'}, name='add_feature'),
     path('features/edit/<int:feature_id>/', views.manage_features, {'action': 'edit'}, name='edit_feature'),
     path('features/delete/<int:feature_id>/', views.manage_features, {'action': 'delete'}, name='delete_feature'),
+
+
+    path('admin-all-bookings/', views.admin_all_bookings, name='admin-all-bookings'),
 ]

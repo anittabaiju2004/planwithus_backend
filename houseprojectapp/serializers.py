@@ -78,16 +78,23 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 from houseprojectapp.models import tbl_register   # import your user model
-class UserRequestSerializer(serializers.Serializer):
+from rest_framework import serializers
+from houseprojectapp.models import tbl_register
+from .models import UserRequest
+from adminapp.models import Category
+
+class UserRequestSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(
-        source='user',  # map "user_id" from request → "user" in model
+        source='user',
         queryset=tbl_register.objects.all(),
         required=True
     )
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-    cent = serializers.FloatField()
-    sqft = serializers.FloatField()
-    expected_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        model = UserRequest
+        fields = ['id', 'user_id', 'category', 'cent', 'sqft', 'expected_amount', 'created_at']
+
 
 
 
@@ -181,77 +188,6 @@ class CategoryImageSerializer(serializers.ModelSerializer):
             return obj.image.url
         return None
 
-
-
-# cart/serializers.py
-
-from rest_framework import serializers
-from .models import Cart, CartItem
-from adminapp.models import Products
-from .serializers import productSerializer  # your product serializer
-
-class CartItemSerializer(serializers.ModelSerializer):
-    product = productSerializer(read_only=True)
-
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'quantity', 'get_total_price']
-
-class CartSerializer(serializers.ModelSerializer):
-    items = CartItemSerializer(many=True, read_only=True)
-    total_amount = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Cart
-        fields = ['id', 'user', 'created_at', 'items', 'total_amount']
-
-    def get_total_amount(self, obj):
-        return sum(item.get_total_price() for item in obj.items.all())
-
-
-# order/serializers.py
-from rest_framework import serializers
-from .models import Order, OrderItem
-from .serializers import productSerializer
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    product = productSerializer(read_only=True)
-
-    class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity', 'price', 'get_total_price']
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Order
-        fields = ['id', 'user', 'created_at', 'total_amount', 'status', 'payment_status', 'address', 'items']
-
-
-
-# payment/serializers.py
-from rest_framework import serializers
-from .models import Payment
-
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = '__all__'
-
-    def validate(self, data):
-        method = data.get("payment_method")
-
-        if method == "UPI" and not data.get("upi_id"):
-            raise serializers.ValidationError({"upi_id": "UPI ID is required for UPI payment."})
-        if method == "CARD":
-            required_fields = ["card_number", "cardholder_name", "expiry_date", "cvv"]
-            for field in required_fields:
-                if not data.get(field):
-                    raise serializers.ValidationError({field: f"{field} is required for Card payment."})
-
-        return data
 
 from rest_framework import serializers
 from .models import Work, WorkImage
@@ -403,6 +339,9 @@ class EngineerBookingSerializer(serializers.ModelSerializer):
     cent = serializers.CharField(read_only=True)
     sqft = serializers.CharField(read_only=True)
     expected_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    features = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=HouseFeature.objects.all()
+    )  # allow posting feature IDs
 
     class Meta:
         model = EngineerBooking
@@ -414,22 +353,21 @@ class EngineerBookingReadSerializer(serializers.ModelSerializer):
     user_phone = serializers.CharField(source='user.phone', read_only=True)
     engineer_name = serializers.CharField(source='engineer.name', read_only=True)
     engineer_phone = serializers.CharField(source='engineer.phone', read_only=True)
+    features = serializers.StringRelatedField(many=True, read_only=True)  # show feature names
 
     class Meta:
         model = EngineerBooking
         fields = [
             'id', 'user_name', 'user_phone', 'engineer_name', 'engineer_phone',
             'address', 'start_date', 'end_date', 'suggestion',
-            'cent', 'sqft', 'expected_amount', 'created_at', 'status'
+            'cent', 'sqft', 'expected_amount', 'features', 'created_at', 'status'
         ]
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         if instance.suggestion:
-            # Always return just the relative media path
             rep['suggestion'] = instance.suggestion.url
         return rep
-
 
 
 from rest_framework import serializers
@@ -452,3 +390,131 @@ class FeedbackSerializer(serializers.ModelSerializer):
             'created_at'
         ]
         read_only_fields = ['created_at']
+
+
+
+
+
+from .serializers import *
+from .models import *
+# cart and booking serializers
+# -----------------------------
+# Booking & Cart Serializers
+# -----------------------------
+from rest_framework import serializers
+from .models import ProductBookings
+
+class ProductBookingSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(write_only=True)
+    product_id = serializers.IntegerField(write_only=True)
+
+    # ✅ Read-only fields for GET response
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    user_name = serializers.CharField(source='user.name', read_only=True)
+
+    class Meta:
+        model = ProductBookings
+        fields = [
+            'id', 'user_id', 'user_name',
+            'product_id', 'product_name',
+            'category_name', 'quantity',
+            'total_price', 'status', 'created_at'
+        ]
+# no need category in booking you can use the below simpler version
+# class ProductBookingSerializer(serializers.ModelSerializer):
+#     user_id = serializers.IntegerField()
+#     product_id = serializers.IntegerField()
+
+#     class Meta:
+#         model = ProductBookings
+#         fields = ['user_id', 'product_id', 'quantity']
+class CartSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(write_only=True)
+    product_id = serializers.IntegerField(write_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = [
+            'id', 'user_id', 'product_id',
+            'product_name', 'category_name',
+            'quantity', 'total_price', 'status', 'created_at'
+        ]
+
+# -----------------------------
+# Checkout Serializers
+# -----------------------------
+class CheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Checkout
+        fields = ['id', 'user', 'booking', 'created_at']
+
+
+class CartCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartCheckout
+        fields = ['id', 'user', 'booking', 'created_at']
+
+
+# -----------------------------
+# Payment Serializers
+# -----------------------------
+class UpiPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Upi
+        fields = '__all__'
+
+
+class CardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Card
+        fields = '__all__'
+
+
+class CartUpiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartUpi
+        fields = '__all__'
+
+
+class CartCardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartCard
+        fields = '__all__'
+
+
+# -----------------------------
+# Payment Details for Bookings
+# -----------------------------
+class PaymentDetailsSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_phone = serializers.CharField(source='user.phone', read_only=True)
+
+    class Meta:
+        model = ProductBookings
+        fields = ['id', 'user', 'user_name', 'user_email', 'user_phone', 'total_price', 'status']
+
+
+class CartPaymentDetailsSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_phone = serializers.CharField(source='user.phone', read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'user_name', 'user_email', 'user_phone', 'total_price', 'status']
+
+
+# -----------------------------
+# Cart History Serializer
+# -----------------------------
+class CartHistorySerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_image = serializers.ImageField(source='product.image', read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'product_name', 'product_image', 'quantity', 'total_price', 'status', 'created_at']

@@ -386,164 +386,6 @@ class DownloadPredictionPDF(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# cart/views.py
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Cart, CartItem
-from adminapp.models import Products
-from houseprojectapp.models import tbl_register
-from .serializers import CartSerializer
-
-class AddToCartAPIView(APIView):
-    def post(self, request):
-        user_id = request.data.get('user_id')
-        product_id = request.data.get('product_id')
-        quantity = request.data.get('quantity', 1)
-
-        user = tbl_register.objects.get(id=user_id)
-        product = Products.objects.get(id=product_id)
-
-        cart, created = Cart.objects.get_or_create(user=user)
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-        if not created:
-            cart_item.quantity += int(quantity)
-        else:
-            cart_item.quantity = int(quantity)
-        cart_item.save()
-
-        return Response({"message": "Product added to cart."}, status=status.HTTP_201_CREATED)
-
-class ViewCartAPIView(APIView):
-    def get(self, request, user_id):
-        cart = Cart.objects.filter(user_id=user_id).first()
-        if not cart:
-            return Response({"message": "Cart is empty."}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = CartSerializer(cart)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
-
-# userapp/views.py
-
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Cart, CartItem,tbl_register
-from adminapp.models import Products
-
-@api_view(['POST'])
-def update_cart_quantity(request):
-    user_id = request.data.get('user_id')
-    product_id = request.data.get('product_id')
-    quantity = request.data.get('quantity')
-
-    if not user_id or not product_id or quantity is None:
-        return Response({'error': 'user_id, product_id, and quantity are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        user = tbl_register.objects.get(id=user_id)
-        product = Products.objects.get(id=product_id)
-    except tbl_register.DoesNotExist:
-        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
-    except Products.DoesNotExist:
-        return Response({'error': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-    cart, _ = Cart.objects.get_or_create(user=user)
-
-    try:
-        cart_item = CartItem.objects.get(cart=cart, product=product)
-        if int(quantity) > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-            return Response({'message': 'Cart updated successfully.'})
-        else:
-            cart_item.delete()
-            return Response({'message': 'Item removed from cart as quantity is 0.'})
-    except CartItem.DoesNotExist:
-        if int(quantity) > 0:
-            CartItem.objects.create(cart=cart, product=product, quantity=quantity)
-            return Response({'message': 'Item added to cart.'})
-        else:
-            return Response({'error': 'Quantity must be greater than 0 to add item.'}, status=status.HTTP_400_BAD_REQUEST)
-
-from .models import Cart, Order, OrderItem
-@api_view(['POST'])
-def place_order(request):
-    user_id = request.data.get('user_id')  # <-- from request body
-    if not user_id:
-        return Response({'error': 'User ID is required'}, status=400)
-
-    try:
-        user = tbl_register.objects.get(id=user_id)
-    except tbl_register.DoesNotExist:
-        return Response({'error': 'User not found'}, status=404)
-
-    cart = Cart.objects.filter(user=user).first()
-    if not cart or not cart.items.exists():
-        return Response({'error': 'Cart is empty'}, status=400)
-
-    total_amount = sum(item.get_total_price() for item in cart.items.all())
-
-    order = Order.objects.create(
-        user=user,
-        total_amount=total_amount,
-        status='Pending',
-        payment_status='Unpaid'
-    )
-
-    for item in cart.items.all():
-        OrderItem.objects.create(
-            order=order,
-            product=item.product,
-            quantity=item.quantity,
-            price=item.product.price
-        )
-
-    cart.items.all().delete()
-
-    return Response({'message': 'Order placed successfully', 'order_id': order.id})
-
-
-# payment/views.py
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from .models import Payment
-from .serializers import PaymentSerializer
-from .models import Order
-from houseprojectapp.models import tbl_register
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-
-    def create(self, request, *args, **kwargs):
-        user_id = request.data.get("user")
-        order_id = request.data.get("order")
-
-        try:
-            user = tbl_register.objects.get(id=user_id)
-            order = Order.objects.get(id=order_id, user=user)
-        except tbl_register.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Order.DoesNotExist:
-            return Response({"error": "Order not found for this user"}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        # Update order payment status if not COD
-        if serializer.validated_data["payment_method"] != "COD":
-            order.payment_status = "Paid"
-            order.status = "Processing"
-            order.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 # ENGINEER ADD WORKS
 from rest_framework import viewsets, status
@@ -578,27 +420,6 @@ class HouseFeatureListView(ListAPIView):
 
 
 
-# # views.py
-# from rest_framework import viewsets, status
-# from rest_framework.response import Response
-# from .models import EngineerRequest
-# from .serializers import EngineerRequestSerializer, EngineerRequestReadSerializer
-# # views.py
-# from rest_framework import viewsets
-# from .models import EngineerRequest
-# from .serializers import EngineerRequestSerializer, EngineerRequestReadSerializer
-
-# class EngineerRequestViewSet(viewsets.ModelViewSet):
-#     queryset = EngineerRequest.objects.all()
-
-#     def get_serializer_class(self):
-#         if self.action in ['list', 'retrieve']:
-#             # For GET requests → show expanded data
-#             return EngineerRequestReadSerializer
-#         # For POST/PUT/PATCH → show form with file field
-#         return EngineerRequestSerializer
-
-
 #GET HOUSES BY REQUEST(CENT, SQFT, EXPECTED AMOUNT) BY USER
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -616,33 +437,41 @@ class HouseSearchAPIView(APIView):
             sqft = serializer.validated_data['sqft']
             expected_amount = serializer.validated_data['expected_amount']
 
-            # Save the request
-            user_request = UserRequest.objects.create(
+            # ✅ Check for existing similar request
+            existing_request = UserRequest.objects.filter(
                 user=user,
                 category=category,
                 cent=cent,
                 sqft=sqft,
                 expected_amount=expected_amount
-            )
+            ).first()
 
-            # Directly filter works by exact cent value
-            matched_works = Work.objects.filter(
-                category=category,
-                cent=cent
-            )
+            if existing_request:
+                message = "Request already exists"
+                user_request = existing_request
+            else:
+                user_request = UserRequest.objects.create(
+                    user=user,
+                    category=category,
+                    cent=cent,
+                    sqft=sqft,
+                    expected_amount=expected_amount
+                )
+                message = "Submit successful"
 
+            # Filter matching works
+            matched_works = Work.objects.filter(category=category, cent=cent)
             works_serializer = WorkReadSerializer(
                 matched_works, many=True, context={'request': request}
             )
 
             return Response({
-                'message': 'Submit successful',
+                'message': message,
                 'request_id': user_request.id,
                 'matched_works': works_serializer.data
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 #GET WORKS BY ENGINEER
 from rest_framework.decorators import api_view
@@ -720,6 +549,7 @@ from .models import EngineerBooking
 from .serializers import EngineerBookingSerializer, EngineerBookingReadSerializer
 
 class EngineerBookingViewSet(viewsets.ModelViewSet):
+    
     queryset = EngineerBooking.objects.all()
 
     def get_serializer_class(self):
@@ -800,3 +630,452 @@ class EngineerViewFeedback(APIView):
         
         serializer = FeedbackSerializer(feedbacks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import UserRequest
+from .serializers import UserRequestSerializer
+from houseprojectapp.models import tbl_register
+
+class UserRequestDetailByUserView(APIView):
+    def get(self, request, user_id, request_id):
+        try:
+            user = tbl_register.objects.get(id=user_id)
+        except tbl_register.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            user_request = UserRequest.objects.get(id=request_id, user=user)
+        except UserRequest.DoesNotExist:
+            return Response({"error": "UserRequest not found for this user"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserRequestSerializer(user_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#cart and booking views can be added here
+from decimal import Decimal
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status, generics
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.conf import settings
+
+from adminapp.models import Products, ProductCategory
+from .models import (
+    tbl_register, ProductBookings, Cart, Checkout, CartCheckout,
+    Upi, Card, CartUpi, CartCard
+)
+from .serializers import (
+    ProductCategorySerializer, productSerializer,
+    ProductBookingSerializer, CartSerializer,
+    CheckoutSerializer, CartCheckoutSerializer,
+    PaymentDetailsSerializer, CartPaymentDetailsSerializer,
+    UpiPaymentSerializer, CardSerializer,
+    CartUpiSerializer, CartCardSerializer
+)
+
+# -----------------------------
+# Product Booking
+# -----------------------------
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.generics import get_object_or_404
+from adminapp.models import Products, ProductCategory
+from houseprojectapp.models import tbl_register, ProductBookings
+from .serializers import ProductBookingSerializer
+
+class ProductBookingView(viewsets.ModelViewSet):
+    serializer_class = ProductBookingSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user_id = serializer.validated_data['user_id']
+            product_id = serializer.validated_data['product_id']
+            quantity = serializer.validated_data['quantity']
+
+            user = get_object_or_404(tbl_register, id=user_id)
+            product = get_object_or_404(Products, id=product_id)
+            category = product.category  # ✅ Automatically get from product
+
+            if quantity > product.quantity:
+                return Response(
+                    {"status": "failed", "message": "Insufficient stock"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            total_price = product.price * quantity
+
+            booking = ProductBookings.objects.create(
+                user=user,
+                category=category,  # ✅ FIXED
+                product=product,
+                quantity=quantity,
+                total_price=total_price,
+                status='pending'
+            )
+
+            # Update product stock
+            product.quantity -= quantity
+            product.save()
+
+            return Response({
+                "status": "success",
+                "message": "Product booked successfully",
+                "booking_id": booking.id,
+                "total_price": total_price
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(
+            {"status": "failed", "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+# -----------------------------
+# Checkout for Booking
+# -----------------------------
+class CheckoutView(viewsets.ModelViewSet):
+    serializer_class = CheckoutSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        booking = serializer.validated_data['booking']
+
+        # advance_fee = booking.total_price * Decimal('0.10')
+        checkout = Checkout.objects.create(
+            user=user,
+            booking=booking,
+            # advance_fee=advance_fee
+        )
+
+        return Response({
+            "status": "success",
+            "message": "Checkout completed",
+            "checkout_id": checkout.id,
+            # "advance_fee": advance_fee
+        }, status=status.HTTP_201_CREATED)
+
+
+# -----------------------------
+# Cart Management
+# -----------------------------
+class CartView(viewsets.ModelViewSet):
+    serializer_class = CartSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get('user_id')
+        product_id = request.data.get('product_id')
+        quantity = int(request.data.get('quantity', 1))
+
+        if not user_id or not product_id or quantity <= 0:
+            return Response(
+                {"status": "failed", "message": "User, Product, and Quantity are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = get_object_or_404(tbl_register, id=user_id)
+        product = get_object_or_404(Products, id=product_id)
+        category = product.category  # ✅ Get category from product
+
+        if quantity > product.quantity:
+            return Response(
+                {"status": "failed", "message": "Insufficient stock"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        total_price = product.price * quantity
+
+        cart_item = Cart.objects.create(
+            user=user,
+            category=category,  # ✅ Add this line
+            product=product,
+            quantity=quantity,
+            total_price=total_price,
+            status="pending"
+        )
+
+        serializer = CartSerializer(cart_item)
+        return Response({"status": "success", "cart_item": serializer.data}, status=status.HTTP_201_CREATED)
+
+
+# -----------------------------
+# Cart Checkout
+# -----------------------------
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from .models import CartCheckout, Cart, tbl_register
+from .serializers import CartCheckoutSerializer
+
+class CartCheckoutViewSet(viewsets.ModelViewSet):
+    queryset = CartCheckout.objects.all()
+    serializer_class = CartCheckoutSerializer
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get('user')
+        booking_id = request.data.get('booking')
+
+        try:
+            user = tbl_register.objects.get(id=user_id)
+            booking = Cart.objects.get(id=booking_id)
+        except (tbl_register.DoesNotExist, Cart.DoesNotExist):
+            return Response({'error': 'Invalid user or booking ID'}, status=status.HTTP_400_BAD_REQUEST)
+
+        checkout = CartCheckout.objects.create(user=user, booking=booking)
+        serializer = self.get_serializer(checkout)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# -----------------------------
+# UPI & Card Payments
+# -----------------------------
+class UpiPaymentView(viewsets.ModelViewSet):
+    serializer_class = UpiPaymentSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        booking_id = request.data.get("booking_id")
+        upi_id = request.data.get("upi_id")
+        if not booking_id or not upi_id:
+            return Response({"message": "Booking ID and UPI ID required"}, 400)
+
+        booking = get_object_or_404(ProductBookings, id=booking_id)
+
+        if Upi.objects.filter(booking=booking).exists():
+            return Response({"message": "Payment already exists"}, 400)
+
+        upi_payment = Upi.objects.create(booking=booking, upi_id=upi_id, status="success")
+        booking.status = "paid"
+        booking.save()
+        serializer = UpiPaymentSerializer(upi_payment)
+        return Response({"status": "success", "data": serializer.data}, 201)
+
+
+class CardPaymentView(viewsets.ModelViewSet):
+    serializer_class = CardSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        booking_id = request.data.get("booking_id")
+        booking = get_object_or_404(ProductBookings, id=booking_id)
+
+        if Card.objects.filter(booking=booking).exists():
+            return Response({"message": "Payment already exists"}, 400)
+
+        card_payment = Card.objects.create(
+            booking=booking,
+            card_holder_name=request.data.get("card_holder_name"),
+            card_number=request.data.get("card_number")[-4:],  # last 4 digits
+            expiry_date=request.data.get("expiry_date"),
+            cvv=request.data.get("cvv"),
+            status="success"
+        )
+
+        booking.status = "paid"
+        booking.save()
+        serializer = CardSerializer(card_payment)
+        return Response({"status": "success", "data": serializer.data}, 201)
+
+
+
+# -----------------------------
+# Cart Summary View
+# -----------------------------
+class CartSummaryView(viewsets.ViewSet):
+    def list(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({"status": "failed", "message": "User ID is required"}, status=400)
+
+        user = tbl_register.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"status": "failed", "message": "User not found"}, status=404)
+
+        cart_items = Cart.objects.filter(user=user, status="pending")
+        if not cart_items.exists():
+            return Response({"status": "failed", "message": "No items in cart"}, status=404)
+
+        total_price = sum(item.total_price for item in cart_items)
+        advance_fee = total_price * Decimal('0.10')
+
+        return Response({
+            "status": "success",
+            "user_id": user.id,
+            "user_name": user.name,
+            "user_email": user.email,
+            "user_phone_number": getattr(user, 'phone_number', ''),
+            "total_price": f"{total_price:.2f}",
+            "advance_fee": f"{advance_fee:.2f}"
+        }, status=200)
+
+
+# -----------------------------
+# View Cart Items
+# -----------------------------
+class ViewCartItems(APIView):
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({"status": "failed", "message": "User ID is required"}, status=400)
+
+        cart_items = Cart.objects.filter(user_id=user_id, status="pending").select_related('product')
+        if not cart_items.exists():
+            return Response({"status": "success", "message": "No pending items in cart", "cart_items": [], "total_price": 0}, status=200)
+
+        cart_data = []
+        total_price = 0
+        for item in cart_items:
+            item_total_price = item.total_price
+            total_price += item_total_price
+            product_image_url = f"{settings.MEDIA_URL}{item.product.image}" if item.product.image else None
+
+            cart_data.append({
+                "id": item.id,
+                "product_name": item.product.name,
+                "quantity": item.quantity,
+                "single_item_price": item.product.price,
+                "item_total_price": item_total_price,
+                "product_image": product_image_url,
+                "status": item.status
+            })
+
+        return Response({"status": "success", "cart_items": cart_data, "total_price": total_price}, status=200)
+
+
+# -----------------------------
+# Remove Cart Item
+# -----------------------------
+class RemoveCartView(generics.DestroyAPIView):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        cart_id = request.query_params.get('id')
+        if not cart_id:
+            return Response({"status": "failed", "message": "Cart ID is required"}, status=400)
+
+        try:
+            cart_item = Cart.objects.get(id=cart_id)
+            cart_item.delete()
+            return Response({"status": "success", "message": "Cart item removed"}, status=200)
+        except Cart.DoesNotExist:
+            return Response({"status": "failed", "message": "Cart item not found"}, status=404)
+
+
+# -----------------------------
+# Cart UPI Payment
+# -----------------------------
+class CartUpiPaymentView(viewsets.ModelViewSet):
+    serializer_class = CartUpiSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        upi_id = request.data.get("upi_id")
+
+        if not user_id or not upi_id:
+            return Response({"message": "User ID and UPI ID are required"}, status=400)
+
+        user = get_object_or_404(tbl_register, id=user_id)
+        cart_items = Cart.objects.filter(user=user, status="pending")
+        if not cart_items.exists():
+            return Response({"message": "No pending cart items"}, status=400)
+
+        upi_payment = CartUpi.objects.create(user=user, upi_id=upi_id, status="success")
+        cart_items.update(status="paid")
+
+        serializer = CartUpiSerializer(upi_payment)
+        return Response({"status": "success", "message": "UPI payment completed", "data": serializer.data}, status=201)
+
+
+# -----------------------------
+# Cart Card Payment
+# -----------------------------
+class CartCardPaymentView(viewsets.ModelViewSet):
+    serializer_class = CartCardSerializer
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        card_holder_name = request.data.get("card_holder_name")
+        card_number = request.data.get("card_number")
+        expiry_date = request.data.get("expiry_date")
+        cvv = request.data.get("cvv")
+
+        if not all([user_id, card_holder_name, card_number, expiry_date, cvv]):
+            return Response({"message": "All card fields are required"}, status=400)
+
+        user = get_object_or_404(tbl_register, id=user_id)
+        cart_items = Cart.objects.filter(user=user, status="pending")
+        if not cart_items.exists():
+            return Response({"message": "No pending cart items"}, status=400)
+
+        card_payment = CartCard.objects.create(
+            user=user,
+            card_holder_name=card_holder_name,
+            card_number=card_number[-4:],  # store last 4 digits
+            expiry_date=expiry_date,
+            cvv=cvv,
+            status="success"
+        )
+
+        cart_items.update(status="paid")
+        serializer = CartCardSerializer(card_payment)
+        return Response({"status": "success", "message": "Card payment completed", "data": serializer.data}, status=201)
+
+
+
+from rest_framework import viewsets
+from rest_framework.response import Response
+from .models import ProductBookings, Cart
+from .serializers import PaymentDetailsSerializer, CartPaymentDetailsSerializer
+
+# -----------------------------
+# Payment List ViewSet
+# -----------------------------
+class PaymentListViewSet(viewsets.ViewSet):
+    """
+    Returns a list of all ProductBookings with user details and total price.
+    """
+
+    def list(self, request):
+        # Optional: filter by user_id if passed in query params
+        user_id = request.query_params.get('user_id', None)
+
+        if user_id:
+            bookings = ProductBookings.objects.filter(user_id=user_id)
+            cart_items = Cart.objects.filter(user_id=user_id)
+        else:
+            bookings = ProductBookings.objects.all()
+            cart_items = Cart.objects.all()
+
+        # Serialize bookings
+        booking_serializer = PaymentDetailsSerializer(bookings, many=True)
+        cart_serializer = CartPaymentDetailsSerializer(cart_items, many=True)
+
+        return Response({
+            "status": "success",
+            "bookings": booking_serializer.data,
+            "cart_items": cart_serializer.data
+        })
