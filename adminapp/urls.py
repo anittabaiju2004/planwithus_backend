@@ -28,5 +28,7 @@ urlpatterns = [
     path('features/delete/<int:feature_id>/', views.manage_features, {'action': 'delete'}, name='delete_feature'),
 
 
-    path('admin-all-bookings/', views.admin_all_bookings, name='admin-all-bookings'),
+    path('admin-all-orders/', views.admin_all_orders, name='admin-all-orders'),
+
+    
 ]

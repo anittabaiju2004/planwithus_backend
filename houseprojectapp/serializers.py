@@ -419,7 +419,7 @@ class ProductBookingSerializer(serializers.ModelSerializer):
             'id', 'user_id', 'user_name',
             'product_id', 'product_name',
             'category_name', 'quantity',
-            'total_price', 'status', 'created_at'
+            'total_price', 'status', 'booking_date'
         ]
 # no need category in booking you can use the below simpler version
 # class ProductBookingSerializer(serializers.ModelSerializer):
@@ -450,12 +450,20 @@ class CheckoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Checkout
         fields = ['id', 'user', 'booking', 'created_at']
-
-
 class CartCheckoutSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    product_name = serializers.CharField(source='booking.product.name', read_only=True)
+    category_name = serializers.CharField(source='booking.category.name', read_only=True)
+    total_price = serializers.DecimalField(source='booking.total_price', read_only=True, max_digits=10, decimal_places=2)
+
     class Meta:
         model = CartCheckout
-        fields = ['id', 'user', 'booking', 'created_at']
+        fields = [
+            'id', 'user', 'user_name', 'user_email',
+            'booking', 'product_name', 'category_name',
+            'total_price', 'created_at'
+        ]
 
 
 # -----------------------------

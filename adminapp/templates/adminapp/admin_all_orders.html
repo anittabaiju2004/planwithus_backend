@@ -1,0 +1,58 @@
+{% extends 'adminapp/index.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="text-center mb-4">All Orders</h3>
+    <div class="table-responsive shadow p-3 bg-white rounded">
+        <table class="table table-bordered table-hover align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Total Price (₹)</th>
+                    <th>Payment Type</th>
+                    <th>Status</th>
+                    <th>Order Source</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in all_orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.user }}</td>
+                    <td>{{ order.category }}</td>
+                    <td>{{ order.product }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.total_price }}</td>
+                    <td>
+                        {% if order.payment_type == 'Pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif order.payment_type == 'UPI' %}
+                            <span class="badge bg-success">UPI</span>
+                        {% elif order.payment_type == 'Card' %}
+                            <span class="badge bg-primary">Card</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order.status }}</td>
+                    <td>
+                        {% if order.order_source == 'Cart' %}
+                            <span class="badge bg-info text-dark">Cart</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Booking</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order.date|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="10" class="text-center">No orders found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

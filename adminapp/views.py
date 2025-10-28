@@ -439,45 +439,60 @@ def manage_features(request, action=None, feature_id=None):
 
 
 
-
 from django.shortcuts import render
-# from django.contrib.admin.views.decorators import staff_member_required
 from houseprojectapp.models import (
     ProductBookings, Cart, Upi, Card, CartUpi, CartCard
 )
 
-# @staff_member_required
-def admin_all_bookings(request):
-    # Product bookings with payment type
-    product_bookings_list = []
-    for item in ProductBookings.objects.select_related('user', 'product', 'category').all().order_by('-booking_date'):
-        if hasattr(item, 'upi'):
+def admin_all_orders(request):
+    all_orders = []
+
+    # 🧾 Add product bookings
+    for booking in ProductBookings.objects.select_related('user', 'product', 'category').all().order_by('-booking_date'):
+        if hasattr(booking, 'upi'):
             payment_type = 'UPI'
-        elif hasattr(item, 'card'):
+        elif hasattr(booking, 'card'):
             payment_type = 'Card'
         else:
             payment_type = 'Pending'
-        product_bookings_list.append({
-            'booking': item,
-            'payment_type': payment_type
+
+        all_orders.append({
+            'id': booking.id,
+            'user': booking.user.name,
+            'category': booking.category.name,
+            'product': booking.product.name,
+            'quantity': booking.quantity,
+            'total_price': booking.total_price,
+            'status': booking.status,
+            'payment_type': payment_type,
+            'date': booking.booking_date,
+            'order_source': 'Direct Booking',
         })
 
-    # Cart bookings with payment type
-    cart_bookings_list = []
-    for item in Cart.objects.select_related('user', 'product', 'category').all().order_by('-created_at'):
-        if CartUpi.objects.filter(user=item.user).exists():
+    # 🧾 Add cart orders
+    for cart in Cart.objects.select_related('user', 'product', 'category').all().order_by('-created_at'):
+        if CartUpi.objects.filter(user=cart.user).exists():
             payment_type = 'UPI'
-        elif CartCard.objects.filter(user=item.user).exists():
+        elif CartCard.objects.filter(user=cart.user).exists():
             payment_type = 'Card'
         else:
             payment_type = 'Pending'
-        cart_bookings_list.append({
-            'booking': item,
-            'payment_type': payment_type
+
+        all_orders.append({
+            'id': cart.id,
+            'user': cart.user.name,
+            'category': cart.category.name,
+            'product': cart.product.name,
+            'quantity': cart.quantity,
+            'total_price': cart.total_price,
+            'status': cart.status,
+            'payment_type': payment_type,
+            'date': cart.created_at,
+            'order_source': 'Cart',
         })
 
-    context = {
-        'product_bookings_list': product_bookings_list,
-        'cart_bookings_list': cart_bookings_list
-    }
-    return render(request, 'adminapp/admin_all_bookings.html', context)
+    # Sort all combined orders by most recent
+    all_orders.sort(key=lambda x: x['date'], reverse=True)
+
+    context = {'all_orders': all_orders}
+    return render(request, 'adminapp/admin_all_orders.html', context)

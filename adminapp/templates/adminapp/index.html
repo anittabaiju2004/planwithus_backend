@@ -91,18 +91,22 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{% url 'approved_engineers' %}">Approved Engineers</a>
+                                    <a class="dropdown-item" href="{% url 'approved_engineers' %}">Approved
+                                        Engineers</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{% url 'rejected_engineers' %}">Rejected Engineers</a>
+                                    <a class="dropdown-item" href="{% url 'rejected_engineers' %}">Rejected
+                                        Engineers</a>
                                 </li>
                             </ul>
                         </li>
                         <li>
-                            <a href="{% url 'add_category' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i> <b>House Categories</b></a>
+                            <a href="{% url 'add_category' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i>
+                                <b>House Categories</b></a>
                         </li>
                         <li>
-                            <a href="{% url 'add_feature' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i> <b>Features</b></a>
+                            <a href="{% url 'add_feature' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i>
+                                <b>Features</b></a>
                         </li>
                         <!-- <li>
                             <a href="{% url 'manage_category_images' %}" class="nav-link"><i class="fas fa-home"></i> <b>Manage Category Images</b></a>
@@ -138,12 +142,16 @@
                                 </li>
                             </ul>
                         </li>
-                       
+
                         <li>
-                            <a href="{% url 'admin-all-bookings' %}" class="nav-link"><i class="bi bi-calendar-event"></i> <b>View Bookings</b></a>
+                            <a href="{% url 'admin-all-orders' %}" class="nav-link">
+                                <i class="bi bi-bag-check"></i> <b>All Orders</b>
+                            </a>
                         </li>
+
                         <li>
-                            <a href="{% url 'logout' %}" class="nav-link"><i class="bi bi-box-arrow-right"></i> <b>Logout</b></a>
+                            <a href="{% url 'logout' %}" class="nav-link"><i class="bi bi-box-arrow-right"></i>
+                                <b>Logout</b></a>
                         </li>
                     </ul>
                 </div>
@@ -187,10 +195,10 @@
                 </div>
 
 
-                
-                
+
+
             </main>
-            
+
             {% endblock %}
         </div>
     </div>

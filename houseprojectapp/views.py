@@ -726,7 +726,7 @@ class ProductBookingView(viewsets.ModelViewSet):
 
             booking = ProductBookings.objects.create(
                 user=user,
-                category=category,  # ✅ FIXED
+                category=category,  #  FIXED
                 product=product,
                 quantity=quantity,
                 total_price=total_price,
@@ -782,8 +782,9 @@ class CheckoutView(viewsets.ModelViewSet):
 # Cart Management
 # -----------------------------
 class CartView(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()  # ✅ Add this line
     serializer_class = CartSerializer
-    http_method_names = ['post']
+    http_method_names = ['post', 'get', 'delete', 'put', 'patch']
 
     def create(self, request, *args, **kwargs):
         user_id = request.data.get('user_id')
@@ -818,8 +819,10 @@ class CartView(viewsets.ModelViewSet):
         )
 
         serializer = CartSerializer(cart_item)
-        return Response({"status": "success", "cart_item": serializer.data}, status=status.HTTP_201_CREATED)
-
+        return Response(
+            {"status": "success", "cart_item": serializer.data},
+            status=status.HTTP_201_CREATED
+        )
 
 # -----------------------------
 # Cart Checkout
@@ -902,9 +905,14 @@ class CardPaymentView(viewsets.ModelViewSet):
 # -----------------------------
 # Cart Summary View
 # -----------------------------
+# views.py
+from rest_framework import viewsets
+from rest_framework.response import Response
+from decimal import Decimal
+from .models import Cart, tbl_register
+
 class CartSummaryView(viewsets.ViewSet):
-    def list(self, request):
-        user_id = request.query_params.get('user_id')
+    def list(self, request, user_id=None):
         if not user_id:
             return Response({"status": "failed", "message": "User ID is required"}, status=400)
 
@@ -928,7 +936,6 @@ class CartSummaryView(viewsets.ViewSet):
             "total_price": f"{total_price:.2f}",
             "advance_fee": f"{advance_fee:.2f}"
         }, status=200)
-
 
 # -----------------------------
 # View Cart Items
@@ -1012,6 +1019,7 @@ class CartUpiPaymentView(viewsets.ModelViewSet):
 # -----------------------------
 # Cart Card Payment
 # -----------------------------
+
 class CartCardPaymentView(viewsets.ModelViewSet):
     serializer_class = CartCardSerializer
     http_method_names = ['post']
@@ -1079,3 +1087,96 @@ class PaymentListViewSet(viewsets.ViewSet):
             "bookings": booking_serializer.data,
             "cart_items": cart_serializer.data
         })
+
+
+
+
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import Cart
+from houseprojectapp.models import tbl_register
+from .serializers import CartSerializer
+
+class UserCartView(viewsets.ViewSet):
+    """
+    ✅ View all cart items for a specific user
+    Endpoint: /user-cart/<user_id>/
+    """
+
+    def list(self, request, user_id=None):
+        user = get_object_or_404(tbl_register, id=user_id)
+        cart_items = Cart.objects.filter(user=user)
+
+        if not cart_items.exists():
+            return Response(
+                {"status": "failed", "message": "No items in the cart"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CartSerializer(cart_items, many=True)
+        return Response({"status": "success", "cart_items": serializer.data}, status=status.HTTP_200_OK)
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import ProductBookings, Cart, Upi, Card, CartUpi, CartCard
+from .serializers import ProductBookingSerializer, CartSerializer
+
+
+class MyOrdersView(APIView):
+    def get(self, request, user_id):
+        """
+        Returns all orders (Bookings + Cart) for a specific user.
+        """
+        combined_orders = []
+
+        # --- Product Bookings ---
+        product_orders = ProductBookings.objects.filter(user_id=user_id).select_related('product', 'category')
+        for order in product_orders:
+            if hasattr(order, 'upi'):
+                payment_type = "UPI"
+            elif hasattr(order, 'card'):
+                payment_type = "Card"
+            else:
+                payment_type = "Pending"
+
+            combined_orders.append({
+                "id": order.id,
+                "product_name": order.product.name,
+                "product_image": f"/media/{order.product.image}" if order.product.image else None,
+                "category_name": order.category.name,
+                "quantity": order.quantity,
+                "total_price": order.total_price,
+                "status": order.status,
+                "payment_type": payment_type,
+                "date": order.booking_date
+            })
+
+        # --- Cart Orders ---
+        cart_orders = Cart.objects.filter(user_id=user_id).select_related('product', 'category')
+        for order in cart_orders:
+            if CartUpi.objects.filter(user_id=user_id).exists():
+                payment_type = "UPI"
+            elif CartCard.objects.filter(user_id=user_id).exists():
+                payment_type = "Card"
+            else:
+                payment_type = "Pending"
+
+            combined_orders.append({
+                "id": order.id,
+                "product_name": order.product.name,
+                "product_image": f"/media/{order.product.image}" if order.product.image else None,
+                "category_name": order.category.name,
+                "quantity": order.quantity,
+                "total_price": order.total_price,
+                "status": order.status,
+                "payment_type": payment_type,
+                "date": order.created_at
+            })
+
+        # Sort by newest first
+        combined_orders.sort(key=lambda x: x["date"], reverse=True)
+
+        return Response(combined_orders, status=status.HTTP_200_OK)
