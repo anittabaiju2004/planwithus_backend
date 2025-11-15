@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Portal Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "primary": "#4A90E2",
+                "secondary": "#E0E6ED",
+                "accent": "#F5A623",
+                "background-light": "#F7F9FC",
+                "background-dark": "#101922",
+                "neutral": { "300": "#D0D8E1", "800": "#333D47" }
+            },
+            fontFamily: { "display": ["Inter", "sans-serif"] },
+            borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            backgroundImage: {
+                'blueprint': "url('data:image/svg+xml;charset=utf-8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\" preserveAspectRatio=\"none\"><path d=\"M0 10h100M10 0v100M0 20h100M20 0v100M0 30h100M30 0v100M0 40h100M40 0v100M0 50h100M50 0v100M0 60h100M60 0v100M0 70h100M70 0v100M0 80h100M80 0v100M0 90h100M90 0v100\" fill=\"none\" stroke=\"%23a0c4ff\" stroke-width=\"0.3\" stroke-opacity=\"0.4\"/></svg>')"
+            }
+        },
+    },
+}
+</script>
+</head>
+<body class="font-display bg-background-light bg-blueprint">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+        <div class="px-4 flex flex-1 justify-center items-center py-5">
+            <div class="layout-content-container flex flex-col w-full max-w-md bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl p-8 border border-gray-200">
+
+                <!-- Header -->
+                <div class="flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-primary text-5xl mr-2">home_work</span>
+                    <h1 class="text-neutral-800 text-2xl font-bold">ConstructAdmin</h1>
+                </div>
+                <div class="flex flex-wrap justify-center gap-3 p-4">
+                    <p class="text-neutral-800 text-4xl font-black leading-tight tracking-[-0.033em] text-center">Admin Portal Login</p>
+                </div>
+
+                <!-- Display messages -->
+                {% if messages %}
+                    <div class="px-4 py-2">
+                        {% for message in messages %}
+                            <p class="text-red-600 text-sm">{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="POST" class="flex flex-col gap-4">
+                    {% csrf_token %}
+                    <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                        <label class="flex flex-col min-w-40 flex-1">
+                            <p class="text-neutral-800 text-base font-medium leading-normal pb-2">Email Address</p>
+                            <input name="email" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-neutral-800 focus:outline-0 focus:ring-2 focus:ring-primary border border-neutral-300 bg-white h-14 placeholder:text-neutral-300 p-[15px] text-base font-normal leading-normal transition-colors" placeholder="Enter your email" type="email" required/>
+                        </label>
+                    </div>
+                    <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                        <label class="flex flex-col min-w-40 flex-1">
+                            <p class="text-neutral-800 text-base font-medium leading-normal pb-2">Password</p>
+                            <input name="password" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-neutral-800 focus:outline-0 focus:ring-2 focus:ring-primary border border-neutral-300 bg-white h-14 placeholder:text-neutral-300 p-[15px] text-base font-normal leading-normal transition-colors" placeholder="Enter your password" type="password" required/>
+                        </label>
+                    </div>
+                    <div class="flex px-4 py-3 mt-4">
+                        <button type="submit" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 flex-1 bg-primary hover:bg-primary/90 text-white text-base font-bold leading-normal tracking-[0.015em] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-primary/50">
+                            <span class="truncate">Log In</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Forgot password -->
+                <p class="text-neutral-800/80 text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">
+                    <a class="underline hover:text-primary transition-colors" href="#">Forgot Password?</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

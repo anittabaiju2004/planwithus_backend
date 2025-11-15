@@ -1,0 +1,159 @@
+{% extends 'adminapp/index.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3 class="text-center mb-4">All Orders</h3>
+
+    <!-- TABS -->
+    <ul class="nav nav-tabs" id="orderTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#cartTab">Cart Orders</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#bookingTab">Single Product Orders</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+
+        <!-- ========================= -->
+        <!-- 🛒 CART ORDERS TAB -->
+        <!-- ========================= -->
+        <div class="tab-pane fade show active" id="cartTab">
+            <div class="table-responsive shadow p-3 bg-white rounded">
+                <h5 class="mb-3">Cart Orders</h5>
+
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Category</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Total Price (₹)</th>
+                            <th>Payment Type</th>
+                            <th>Payment Status</th>
+                            <th>Order Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in cart_orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.user }}</td>
+                            <td>{{ order.category }}</td>
+                            <td>{{ order.product }}</td>
+                            <td>{{ order.quantity }}</td>
+                            <td>₹{{ order.total_price }}</td>
+
+                            <td>
+                                {% if order.payment_type == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif order.payment_type == 'UPI' %}
+                                    <span class="badge bg-success">UPI</span>
+                                {% elif order.payment_type == 'CARD' %}
+                                    <span class="badge bg-primary">Card</span>
+                                {% elif order.payment_type == 'cash' %}
+                                    <span class="badge bg-info text-dark">COD</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if order.payment_status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif order.payment_status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ order.status }}</td>
+                            <td>{{ order.date|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="10" class="text-center">No cart orders found</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========================= -->
+        <!-- 📦 SINGLE PRODUCT BOOKING TAB -->
+        <!-- ========================= -->
+        <div class="tab-pane fade" id="bookingTab">
+            <div class="table-responsive shadow p-3 bg-white rounded">
+                <h5 class="mb-3">Single Product Orders</h5>
+
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Category</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Total Price (₹)</th>
+                            <th>Payment Type</th>
+                            <th>Payment Status</th>
+                            <th>Order Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for order in booking_orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.user }}</td>
+                            <td>{{ order.category }}</td>
+                            <td>{{ order.product }}</td>
+                            <td>{{ order.quantity }}</td>
+                            <td>₹{{ order.total_price }}</td>
+
+                            <td>
+                                {% if order.payment_type == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif order.payment_type == 'UPI' %}
+                                    <span class="badge bg-success">UPI</span>
+                                {% elif order.payment_type == 'CARD' %}
+                                    <span class="badge bg-primary">Card</span>
+                                {% elif order.payment_type == 'cash' %}
+                                    <span class="badge bg-info text-dark">COD</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if order.payment_status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif order.payment_status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ order.status }}</td>
+                            <td>{{ order.date|date:"Y-m-d H:i" }}</td>
+                        </tr>
+
+                        {% empty %}
+                        <tr><td colspan="10" class="text-center">No booking orders found</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

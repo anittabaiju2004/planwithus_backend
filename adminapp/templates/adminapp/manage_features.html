@@ -1,0 +1,56 @@
+{% extends "adminapp/index.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid col-lg-8 py-3">
+    <h4 class="mb-3 fw-bold fs-4">Manage House Features</h4>
+
+    <!-- Show Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} py-2 mb-2 fs-6">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Add/Edit Form -->
+    <div class="card mb-3">
+        <div class="card-header py-2 fs-6 fw-semibold">
+            {% if edit_feature %} Edit Feature {% else %} Add Feature {% endif %}
+        </div>
+        <div class="card-body py-2">
+            <form method="POST" action="{% if edit_feature %}{% url 'edit_feature' edit_feature.id %}{% else %}{% url 'add_feature' %}{% endif %}">
+                {% csrf_token %}
+                <div class="mb-2">
+                    <input type="text" name="name" class="form-control form-control-sm fs-6" placeholder="Feature name" value="{{ edit_feature.name|default:'' }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm fs-6">{% if edit_feature %} Update {% else %} Add {% endif %}</button>
+                {% if edit_feature %}
+                    <a href="{% url 'feature_list' %}" class="btn btn-secondary btn-sm fs-6">Cancel</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- List Features -->
+    <table class="table table-sm table-bordered align-middle fs-6">
+        <thead class="table-light">
+            <tr>
+                <th class="fw-semibold">Feature Name</th>
+                <th style="width: 120px;" class="fw-semibold">Edit</th>
+                <th style="width: 120px;" class="fw-semibold">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feature in features %}
+                <tr>
+                    <td class="fs-6">{{ feature.name }}</td>
+                    <td><a href="{% url 'edit_feature' feature.id %}" class="btn btn-warning btn-sm fs-6">Edit</a></td>
+                    <td><a href="{% url 'delete_feature' feature.id %}" class="btn btn-danger btn-sm fs-6" onclick="return confirm('Delete this feature?')">Delete</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3" class="text-center small text-muted">No features found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

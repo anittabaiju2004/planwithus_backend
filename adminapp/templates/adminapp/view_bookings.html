@@ -1,0 +1,75 @@
+{% extends 'adminapp/index.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4"><i class="bi bi-calendar-event"></i> View Engineer Bookings</h2>
+
+    {% if bookings %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Engineer</th>
+                        <th>Address</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Cent</th>
+                        <th>Sqft</th>
+                        <th>Expected Amount</th>
+                        <th>Status</th>
+                        <th>Features</th>
+                        <th>Suggestion File</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ booking.user.name }}</td>
+                        <td>{{ booking.engineer.name }}</td>
+                        <td>{{ booking.address }}</td>
+                        <td>{{ booking.start_date }}</td>
+                        <td>{{ booking.end_date }}</td>
+                        <td>{{ booking.cent }}</td>
+                        <td>{{ booking.sqft }}</td>
+                        <td>₹{{ booking.expected_amount }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if booking.status == 'completed' %}bg-success
+                                {% elif booking.status == 'rejected' %}bg-danger
+                                {% elif booking.status == 'accepted' %}bg-primary
+                                {% elif booking.status == 'work_started' %}bg-warning
+                                {% else %}bg-secondary{% endif %}
+                            ">
+                                {{ booking.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% for feature in booking.features.all %}
+                                <span class="badge bg-info text-dark">{{ feature.name }}</span>
+                            {% empty %}
+                                <span class="text-muted">No Features</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if booking.suggestion %}
+                                <a href="{{ booking.suggestion.url }}" class="btn btn-sm btn-outline-info" target="_blank">View</a>
+                            {% else %}
+                                <span class="text-muted">No File</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ booking.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center">No bookings found.</div>
+    {% endif %}
+</div>
+{% endblock %}

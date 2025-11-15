@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Plan With US AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f6fa;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background-color: #0b72bb;
+        }
+
+        .sidebar .nav-link {
+            color: #dcdde1;
+            padding: 12px 20px;
+            font-size: 15px;
+        }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: #34495e;
+            color: #fff;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        footer {
+            font-size: 14px;
+        }
+
+        canvas {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .editable-input {
+            display: none;
+            width: 60%;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row flex-nowrap">
+            <!-- Sidebar -->
+            <nav class="col-auto col-md-3 col-lg-2 px-0 sidebar">
+                <div class="d-flex flex-column p-3 text-white">
+                    <h2>Plan With Us</h2>
+                    <h4 class="text-white ps-3 mb-4"><i class="bi bi-person"></i> Admin Panel</h4>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="{% url 'index' %}" class="nav-link link"> <i class="fas fa-home"></i></i>
+                                <b>Home</b></a>
+                        </li>
+                        <li>
+                            <a href="{% url 'view_users' %}" class="nav-link"><i class="bi bi-person-circle"></i>
+                                <b>Manage Users</b></a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="engineerDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-cog"></i> <b>Manage Engineers</b>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="engineerDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'view_engineers' %}">
+                                        Pending Engineers
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'approved_engineers' %}">Approved
+                                        Engineers</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'rejected_engineers' %}">Rejected
+                                        Engineers</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_category' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i>
+                                <b>House Categories</b></a>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_feature' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i>
+                                <b>Features</b></a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="productDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-box"></i> <b>Product Categories</b>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="productDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'add_product_category' %}">Add Category</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'add_product' %}">Add Product</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'product_list' %}">View Products</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="{% url 'admin-all-orders' %}" class="nav-link">
+                                <i class="bi bi-bag-check"></i> <b>All Orders</b>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'view_bookings' %}" class="nav-link">
+                                <i class="bi bi-calendar-event"></i> <b>View Bookings</b>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{% url 'logout' %}" class="nav-link"><i class="bi bi-box-arrow-right"></i>
+                                <b>Logout</b></a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="container-fluid mt-3">
+                <!-- Home Button -->
+                <div class="mb-3">
+                    <a href="{% url 'index' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-1"></i><strong>Home</strong>
+                    </a>
+                </div>
+                <div class="card w-100">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">Add / Manage Categories</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- Add Category Form -->
+                        <form method="POST" class="mb-4">
+                            {% csrf_token %}
+                            <div class="mb-3 d-flex">
+                                <input type="text" name="name" class="form-control form-control-sm me-2"
+                                    style="max-width: 250px; color: #090909; background: #fff;" placeholder="Enter category name" required>
+                                <button type="submit" name="add" class="btn btn-success btn-sm" style="color: #090909;">Add</button>
+                            </div>
+                        </form>
+
+                        <!-- 2 Categories per row -->
+                        <div class="row">
+                            {% for category in categories %}
+                            {% if forloop.counter0|divisibleby:2 %}
+                            <div class="row mb-3">
+                                {% endif %}
+
+                                <div class="col-md-6">
+                                    <form method="POST" class="border p-3 rounded bg-light" style="color: #090909;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="category_id" value="{{ category.id }}">
+
+                                        <div class="mb-2">
+                                            <span class="name-label" style="color: #090909;">{{ category.name }}</span>
+                                            <input type="text" name="edited_name" class="form-control editable-input"
+                                                value="{{ category.name }}" style="color: #090909; background: #fff;">
+                                        </div>
+
+                                        <div class="d-flex">
+                                            <button type="button"
+                                                class="btn btn-sm btn-primary me-2 edit-btn" style="color: #090909;">Edit</button>
+                                            <button type="submit" name="edit"
+                                                class="btn btn-sm btn-success me-2 editable-input"
+                                                style="display: none; color: #090909;">Save</button>
+                                            <button type="submit" name="delete" class="btn btn-sm btn-danger"
+                                                style="color: #090909;"
+                                                onclick="return confirm('Delete this category?');">Delete</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                {% if forloop.counter0|add:1|divisibleby:2 or forloop.last %}
+                            </div>
+                            {% endif %}
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-warning" style="color: #090909;">No categories found.</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inline Edit Script -->
+            <script>
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const card = btn.closest('form');
+                        card.querySelector('.name-label').style.display = 'none';
+                        card.querySelector('.editable-input').style.display = 'inline-block';
+                        btn.style.display = 'none';
+                        card.querySelector('[name="edit"]').style.display = 'inline-block';
+                    });
+                });
+            </script>
+
+            <!-- JS Libraries -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <!-- Chart Script -->
+            <!--
+    <script>
+        const ctx = document.getElementById('overviewChart').getContext('2d');
+        const overviewChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Users', 'Engineers', 'Bookings'],
+                datasets: [{
+                    label: 'Count',
+                    data: [45, 20, 35],  // Replace with dynamic values later
+                    backgroundColor: ['#0d6efd', '#198754', '#ffc107'],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Total: ${context.raw}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 10
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    -->
+
+</body>
+
+</html>

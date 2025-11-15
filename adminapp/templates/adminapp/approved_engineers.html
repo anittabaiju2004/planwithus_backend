@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Plan With US AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f6fa;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background-color: #0b72bb;
+        }
+
+        .sidebar .nav-link {
+            color: #dcdde1;
+            padding: 12px 20px;
+            font-size: 15px;
+        }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: #34495e;
+            color: #fff;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        footer {
+            font-size: 14px;
+        }
+
+        canvas {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .editable-input {
+            display: none;
+            width: 60%;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row flex-nowrap">
+            <!-- Sidebar -->
+           <nav class="col-auto col-md-3 col-lg-2 px-0 sidebar">
+                <div class="d-flex flex-column p-3 text-white">
+                    <h2>Plan With Us</h2>
+                    <h4 class="text-white ps-3 mb-4"><i class="bi bi-person"></i> Admin Panel</h4>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="{% url 'index' %}" class="nav-link link"> <i class="fas fa-home"></i></i>
+                                <b>Home</b></a>
+                        </li>
+                        <li>
+                            <a href="{% url 'view_users' %}" class="nav-link"><i class="bi bi-person-circle"></i>
+                                <b>Manage Users</b></a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="engineerDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-cog"></i> <b>Manage Engineers</b>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="engineerDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'view_engineers' %}">
+                                        Pending Engineers
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'approved_engineers' %}">Approved
+                                        Engineers</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'rejected_engineers' %}">Rejected
+                                        Engineers</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_category' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i>
+                                <b>House Categories</b></a>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_feature' %}" class="nav-link"><i class="bi bi-grid-3x3-gap-fill"></i>
+                                <b>Features</b></a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="productDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-box"></i> <b>Product Categories</b>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="productDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'add_product_category' %}">Add Category</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'add_product' %}">Add Product</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'product_list' %}">View Products</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="{% url 'admin-all-orders' %}" class="nav-link">
+                                <i class="bi bi-bag-check"></i> <b>All Orders</b>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'view_bookings' %}" class="nav-link">
+                                <i class="bi bi-calendar-event"></i> <b>View Bookings</b>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{% url 'logout' %}" class="nav-link"><i class="bi bi-box-arrow-right"></i>
+                                <b>Logout</b></a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <main class="col py-4 content-area">
+                <!-- Home Button -->
+                <div class="mb-3">
+                    <a href="{% url 'index' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-1"></i><strong>Home</strong>
+                    </a>
+                </div>
+                <h2>Approved Engineers List</h2>
+                <div class="mb-3">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search engineer by name..."
+                        style="max-width: 300px; border: 1px solid #198754;">
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>ID Proof</th>
+                            <th>Status</th>
+
+                            <th>Reject</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for engineer in engineers %}
+                        <tr>
+                            <td>
+                                {% if engineer.profile_image %}
+                                <img src="{{ engineer.profile_image.url }}" alt="Profile Image"
+                                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                {% else %}
+                                No Image
+                                {% endif %}
+                            </td>
+
+                            <td>{{ engineer.name }}</td>
+                            <td>{{ engineer.email }}</td>
+                            <td>{{ engineer.phone }}</td>
+                            <td>{{ engineer.address }}</td>
+                            <td>
+                                {% if engineer.id_proof %}
+                                <a href="#" class="view-id-proof" data-id-url="{{ engineer.id_proof.url }}">View ID
+                                    Proof</a>
+                                {% else %}
+                                No File
+                                {% endif %}
+                            </td>
+                            <td>{{ engineer.status|title }}</td>
+
+                            <td>
+                                <a href="{% url 'reject_engineer' engineer.id %}" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Are you sure you want to reject this engineer?');">Reject</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">No engineers found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+
+    <!-- JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Modal (already present in your code) -->
+    <div class="modal fade" id="idProofModal" tabindex="-1" aria-labelledby="idProofModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="idProofModalLabel">ID Proof</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="idProofImage" src="" alt="ID Proof"
+                        style="max-width:100%; max-height:400px; display:none;">
+                    <a id="idProofFile" href="" target="_blank" style="display:none;">Download/View File</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.view-id-proof').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                var url = this.getAttribute('data-id-url');
+                var modal = new bootstrap.Modal(document.getElementById('idProofModal'));
+                var img = document.getElementById('idProofImage');
+                var file = document.getElementById('idProofFile');
+                // Check if file is image
+                if (url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                    img.src = url;
+                    img.style.display = 'block';
+                    file.style.display = 'none';
+                } else {
+                    img.style.display = 'none';
+                    file.href = url;
+                    file.textContent = 'Download/View File';
+                    file.style.display = 'block';
+                }
+                modal.show();
+            });
+        });
+    </script>
+    <!-- Chart Script -->
+    <script>
+        const ctx = document.getElementById('overviewChart').getContext('2d');
+        const overviewChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Users', 'Engineers', 'Bookings'],
+                datasets: [{
+                    label: 'Count',
+                    data: [45, 20, 32],  // Replace with dynamic values later
+                    backgroundColor: ['#0d6efd', '#198754', '#ffc107'],
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Total: ${context.raw}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 10
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function () {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                const nameCell = row.querySelector("td:nth-child(2)");
+                if (nameCell) {
+                    const name = nameCell.textContent.toLowerCase();
+                    row.style.display = name.includes(filter) ? "" : "none";
+                }
+            });
+        });
+    </script>
+    <footer class="text-center text-muted mt-5">
+        <p>&copy; 2025 House Construction AI. All rights reserved.</p>
+
+</body>
+
+</html>
