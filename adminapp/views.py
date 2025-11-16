@@ -128,120 +128,11 @@ def add_category(request):
     categories = Category.objects.all()
     return render(request, 'adminapp/add_category.html', {'categories': categories})
 
-from .models import House, HouseImage
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.core.files.storage import FileSystemStorage
 
-# views.py
-def add_house(request):
-    categories = Category.objects.all()
-
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        category_id = request.POST.get('category')
-        expected_amount = request.POST.get('expected_amount')
-        cent_range = request.POST.get('cent_range')
-        sqft_range = request.POST.get('sqft_range')
-
-        if name and category_id:
-            category = Category.objects.get(id=category_id)
-            house = House.objects.create(
-                name=name,
-                description=description,
-                category=category,
-                expected_amount=expected_amount,
-                cent_range=cent_range,
-                sqft_range=sqft_range
-            )
-            for image_file in request.FILES.getlist('images'):
-                HouseImage.objects.create(house=house, image=image_file)
-            return redirect('add_house')
-
-
-    return render(request, 'adminapp/add_house.html', {'categories': categories})
-
-
-from django.core.paginator import Paginator
-from django.db.models import Q
-
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import House, HouseImage, Category
-from django.core.paginator import Paginator
-
-def manage_houses(request):
-    categories = Category.objects.all()
-
-    if request.method == 'POST':
-        house_id = request.POST.get('house_id')
-        house = get_object_or_404(House, id=house_id)
-
-        if 'edit' in request.POST:
-            house.name = request.POST.get('name')
-            house.description = request.POST.get('description')
-            category_id = request.POST.get('category')
-            house.category = Category.objects.get(id=category_id)
-            house.expected_amount = request.POST.get('expected_amount')
-            house.cent_range = request.POST.get('cent_range')
-            house.sqft_range = request.POST.get('sqft_range')
-            house.save()
-
-            # ✅ Handle delete and update of images
-            for image in house.images.all():
-                # Delete if requested
-                if f'delete_image_{image.id}' in request.POST:
-                    image.delete()
-                # Replace if file uploaded
-                elif f'update_image_{image.id}' in request.FILES:
-                    image.image = request.FILES[f'update_image_{image.id}']
-                    image.save()
-
-            # ✅ Add new images
-            new_images = request.FILES.getlist('new_images')
-            for img in new_images:
-                HouseImage.objects.create(house=house, image=img)
-
-        elif 'delete' in request.POST:
-            house.delete()
-
-        return redirect('manage_houses')
-
-    # GET request - Filter + paginate
-    search_query = request.GET.get('search', '')
-    category_filter = request.GET.get('category', '')
-
-    houses = House.objects.prefetch_related('images').all()
-    if search_query:
-        houses = houses.filter(name__icontains=search_query)
-    if category_filter:
-        houses = houses.filter(category__id=category_filter)
-
-    paginator = Paginator(houses, 5)
-    page_number = request.GET.get('page')
-    houses_page = paginator.get_page(page_number)
-
-    return render(request, 'adminapp/manage_houses.html', {
-        'houses': houses_page,
-        'categories': categories,
-        'search_query': search_query,
-        'category_filter': category_filter
-    })
 
 
 from django.http import HttpResponseRedirect
 
-def update_house_image(request, image_id):
-    image = get_object_or_404(HouseImage, id=image_id)
-
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            image.delete()
-        elif 'update' in request.POST and 'new_image' in request.FILES:
-            image.image = request.FILES['new_image']
-            image.save()
-
-    return redirect('manage_houses')
 from .models import Products, ProductCategory
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import ProductCategory
@@ -352,48 +243,6 @@ def delete_product(request, product_id):
     return redirect('product_list')
 
 
-
-from .models import Category, CategoryImage
-from .models import Category, CategoryImage
-from django.shortcuts import render, get_object_or_404, redirect
-def manage_category_images(request):
-    categories = Category.objects.all()
-
-    if request.method == 'POST':
-        category_id = request.POST.get('category_id')
-        description = request.POST.get('description', '')  
-        name = request.POST.get('name', '')  
-        category = get_object_or_404(Category, id=category_id)
-
-        if 'delete' in request.POST:
-            if hasattr(category, 'image'):
-                category.image.delete()
-
-        elif 'upload' in request.POST:
-            new_image = request.FILES.get('new_image')
-
-            if hasattr(category, 'image'):
-                # Update description and name always
-                category.image.description = description  
-                category.image.name = name
-
-                if new_image:
-                    category.image.image = new_image
-
-                category.image.save()
-            else:
-                CategoryImage.objects.create(
-                    category=category,
-                    image=new_image,
-                    description=description,
-                    name=name
-                )
-
-        return redirect('manage_category_images')
-
-    return render(request, 'adminapp/manage_category_images.html', {
-        'categories': categories,
-    })
 
 
 # houseprojectapp/views.py

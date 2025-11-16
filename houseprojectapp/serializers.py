@@ -70,7 +70,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
 # serializers.py
 from rest_framework import serializers
-from adminapp.models import Category, CategoryImage, House, HouseImage
+from adminapp.models import Category, CategoryImage
 from .models import UserRequest
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -104,28 +104,6 @@ from adminapp.models import Category
 
 
 
-# class HouseImageSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = HouseImage
-class HouseImageSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = HouseImage
-        fields = ['image']
-
-    def get_image(self, obj):
-        if obj.image:
-            return obj.image.url  # This returns "/media/..." path
-        return None
-
-
-class HouseSerializer(serializers.ModelSerializer):
-    images = HouseImageSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = House
-        fields = ['id', 'name', 'description', 'expected_amount', 'cent_range', 'sqft_range', 'images']
 
 
 # serializers.py
@@ -508,6 +486,7 @@ class ProductBookingSerializer(serializers.ModelSerializer):
             'category_name', 'quantity',
             'total_price', 'status', 'booking_date'
         ]
+
 class CartSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(write_only=True)
     product_id = serializers.IntegerField(write_only=True)

@@ -82,5 +82,6 @@ urlpatterns = [
       path('user/<int:user_id>/bookings/', UserBookingsAPIView.as_view(), name='user-bookings'),
    
       path('cart/<int:product_id>/', CartCreateView.as_view(), name='cart-create'),
+      path("engineer/booking/reject/<int:booking_id>/", EngineerRejectBooking.as_view(),name='engineer_reject_booking'),
 ]
 

@@ -138,6 +138,8 @@ class EngineerBooking(models.Model):
     
     # Add features field
     features = models.ManyToManyField(HouseFeature, blank=True, related_name="bookings")
+    reject_reason = models.TextField(null=True, blank=True)
+
 
     created_at = models.DateTimeField(auto_now_add=True)
 

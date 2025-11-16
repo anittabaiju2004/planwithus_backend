@@ -557,6 +557,49 @@ class EngineerBookingViewSet(viewsets.ModelViewSet):
             return EngineerBookingReadSerializer
         return EngineerBookingSerializer
 
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import EngineerBooking
+
+class EngineerRejectBooking(APIView):
+    def patch(self, request, booking_id):
+        """
+        Engineer rejects booking with reason.
+        URL: /userapp/engineer/booking/reject/<booking_id>/
+        """
+        try:
+            booking = EngineerBooking.objects.get(id=booking_id)
+        except EngineerBooking.DoesNotExist:
+            return Response(
+                {"error": "Booking not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        reason = request.data.get("reason")
+
+        if not reason:
+            return Response(
+                {"error": "Reject reason is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        booking.status = "rejected"
+        booking.reject_reason = reason
+        booking.save()
+
+        return Response(
+            {
+                "message": "Booking rejected successfully",
+                "booking_id": booking.id,
+                "status": booking.status,
+                "reason": booking.reject_reason
+            },
+            status=status.HTTP_200_OK
+        )
+
         
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -1333,39 +1376,3 @@ class UserBookingsAPIView(APIView):
 
         serializer = EngineerBookingReadSerializer(bookings, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
-# # -----------------------------
-# # Checkout for Booking
-# # -----------------------------
-# class CheckoutView(viewsets.ModelViewSet):
-#     serializer_class = CheckoutSerializer
-#     http_method_names = ['post']
-
-#     def create(self, request, *args, **kwargs):
-#         user_id = request.data.get("user")
-#         booking_id = request.data.get("booking")
-#         total_amount = request.data.get("total_amount")
-
-#         if not all([user_id, booking_id, total_amount]):
-#             return Response(
-#                 {"status": "failed", "message": "user, booking, and total_amount are required"},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-
-#         user = get_object_or_404(tbl_register, id=user_id)
-#         booking = get_object_or_404(ProductBookings, id=booking_id)
-
-#         checkout = Checkout.objects.create(
-#             user=user,
-#             booking=booking,
-#             total_amount=total_amount
-#         )
-
-#         serializer = self.get_serializer(checkout)
-#         return Response(
-#             {"status": "success", "message": "Checkout completed", "data": serializer.data},
-#             status=status.HTTP_201_CREATED
-#         )
-
