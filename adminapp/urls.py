@@ -18,7 +18,6 @@ urlpatterns = [
     path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
     path('delete-product/<int:product_id>/', views.delete_product, name='delete_product'),
     path('add_product_category/', views.add_product_category, name='add_product_category'),
-    path('manage-category-images/', views.manage_category_images, name='manage_category_images'),
     path('features/', views.manage_features, name='feature_list'),
     path('features/add/', views.manage_features, {'action': 'add'}, name='add_feature'),
     path('features/edit/<int:feature_id>/', views.manage_features, {'action': 'edit'}, name='edit_feature'),

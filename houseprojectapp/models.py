@@ -91,34 +91,6 @@ class WorkImage(models.Model):
 from django.db import models
 from .models import tbl_register, tbl_engineer, UserRequest
 
-class EngineerRequest(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
-        ('rejected', 'Rejected'),
-    ]
-
-    user = models.ForeignKey(tbl_register, on_delete=models.CASCADE, related_name="engineer_requests")
-    engineer = models.ForeignKey(tbl_engineer, on_delete=models.CASCADE, related_name="user_requests")
-    user_request = models.ForeignKey(UserRequest, on_delete=models.CASCADE, related_name="engineer_requests")
-    
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(null=True, blank=True)
-    suggestion = models.FileField(upload_to="suggestions/", null=True, blank=True)  # PDF upload
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        user_name = getattr(self.user, 'name', 'Unknown user')
-        engineer_name = getattr(self.engineer, 'name', 'Unknown engineer')
-        return f"Request from {user_name} to {engineer_name}"
-
-
-
-
 from adminapp.models import HouseFeature  # import your HouseFeature model
 
 class EngineerBooking(models.Model):

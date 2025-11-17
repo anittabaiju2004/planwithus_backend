@@ -70,7 +70,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
 # serializers.py
 from rest_framework import serializers
-from adminapp.models import Category, CategoryImage
+from adminapp.models import Category
 from .models import UserRequest
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -154,17 +154,6 @@ class productSerializer(serializers.ModelSerializer):
 
     # serializers.py
 
-class CategoryImageSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = CategoryImage
-        fields = ['id', 'category', 'image','description']
-
-    def get_image(self, obj):
-        if obj.image:
-            return obj.image.url
-        return None
 
 
 from rest_framework import serializers
@@ -254,55 +243,6 @@ class HouseFeatureSerializer(serializers.ModelSerializer):
         model = HouseFeature
         fields = ['id', 'name']
         
-
-
-
-
-# # serializers.py
-# from rest_framework import serializers
-# from .models import EngineerRequest, UserRequest, tbl_register, tbl_engineer
-
-# # serializers.py
-# class EngineerRequestSerializer(serializers.ModelSerializer):
-#     suggestion = serializers.FileField(required=False, allow_null=True)
-
-#     class Meta:
-#         model = EngineerRequest
-#         fields = [
-#             "id", "user", "engineer", "user_request",
-#             "start_date", "end_date", "suggestion", "status"
-#         ]
-
-#     def to_representation(self, instance):
-#         rep = super().to_representation(instance)
-#         if instance.suggestion:
-#             rep['suggestion'] = instance.suggestion.url  # returns /media/suggestions/...
-#         return rep
-
-# class EngineerRequestReadSerializer(serializers.ModelSerializer):
-#     # expand user info
-#     name = serializers.CharField(source="user.name", read_only=True)
-#     phone = serializers.CharField(source="user.phone", read_only=True)
-#     address = serializers.CharField(source="user.address", read_only=True)
-
-#     # expand request info
-#     cent = serializers.FloatField(source="user_request.cent", read_only=True)
-#     sqft = serializers.FloatField(source="user_request.sqft", read_only=True)
-#     expected_amount = serializers.DecimalField(source="user_request.expected_amount", max_digits=12, decimal_places=2, read_only=True)
-
-#     suggestion = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = EngineerRequest
-#         fields = [
-#             "id", "user", "engineer",
-#             "name", "phone", "address",
-#             "cent", "sqft", "expected_amount",
-#             "start_date", "end_date", "suggestion", "status"
-#         ]
-
-#     def get_suggestion(self, obj):
-#         return obj.suggestion.url if obj.suggestion else None
 
 
 
@@ -414,7 +354,7 @@ class EngineerBookingReadSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user_name', 'user_phone', 'engineer_name', 'engineer_phone',
             'address', 'start_date', 'end_date', 'suggestion',
-            'cent', 'sqft', 'expected_amount', 'features', 'created_at', 'status','user_request'
+            'cent', 'sqft', 'expected_amount', 'features', 'created_at', 'status','user_request','reject_reason'
         ]
 
     def to_representation(self, instance):
@@ -538,52 +478,3 @@ class CartPaymentSerializer(serializers.ModelSerializer):
             'card_holder_name', 'card_number', 'expiry_date', 'cvv',
             'total_amount', 'created_at','payment_choice'
         ]
-
-# # -----------------------------
-# # Payment Serializers
-# # -----------------------------
-# class UpiPaymentSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Upi
-#         fields = '__all__'
-
-
-# class CardSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Card
-#         fields = '__all__'
-
-
-# # -----------------------------
-# # Payment Details for Bookings
-# # -----------------------------
-# class PaymentDetailsSerializer(serializers.ModelSerializer):
-#     user_name = serializers.CharField(source='user.name', read_only=True)
-#     user_email = serializers.CharField(source='user.email', read_only=True)
-#     user_phone = serializers.CharField(source='user.phone', read_only=True)
-
-#     class Meta:
-#         model = ProductBookings
-#         fields = ['id', 'user', 'user_name', 'user_email', 'user_phone', 'total_price', 'status']
-
-
-# class CartPaymentDetailsSerializer(serializers.ModelSerializer):
-#     user_name = serializers.CharField(source='user.name', read_only=True)
-#     user_email = serializers.CharField(source='user.email', read_only=True)
-#     user_phone = serializers.CharField(source='user.phone', read_only=True)
-
-#     class Meta:
-#         model = Cart
-#         fields = ['id', 'user', 'user_name', 'user_email', 'user_phone', 'total_price', 'status']
-
-
-# # -----------------------------
-# # Cart History Serializer
-# # -----------------------------
-# class CartHistorySerializer(serializers.ModelSerializer):
-#     product_name = serializers.CharField(source='product.name', read_only=True)
-#     product_image = serializers.ImageField(source='product.image', read_only=True)
-
-#     class Meta:
-#         model = Cart
-#         fields = ['id', 'product_name', 'product_image', 'quantity', 'total_price', 'status', 'created_at']

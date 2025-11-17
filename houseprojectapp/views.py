@@ -5,7 +5,7 @@ from rest_framework import viewsets
 from houseprojectapp.utils.material_budget import get_material_budget
 from .models import  UserRequest, tbl_register
 from .models import tbl_engineer
-from .serializers import CategoryImageSerializer, EngineerSerializer, UserRequestSerializer,UserLoginSerializer
+from .serializers import  EngineerSerializer, UserRequestSerializer,UserLoginSerializer
 from .serializers import RegisterSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -94,35 +94,14 @@ class LoginView(APIView):
 
 
 
-
-#get images
-class GetImagesByRequestAPIView(APIView):
-    def get(self, request, request_id):
-        try:
-            user_request = UserRequest.objects.get(id=request_id)
-        except UserRequest.DoesNotExist:
-            return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        matched_images = CategoryImage.objects.filter(category=user_request.category)
-
-        serializer = CategoryImageSerializer(matched_images, many=True, context={'request': request})
-
-        return Response({
-            "request_id": request_id,
-            "category_id": user_request.category.id,      # ✅ Return ID
-            "category_name": user_request.category.name,  # ✅ Or return name
-            "images": serializer.data
-        }, status=status.HTTP_200_OK)
-
-
 #predict house
 
 from houseprojectapp.utils.predict_plan import predict_house_type
 from houseprojectapp.utils.predict_plan import predict_house_type
 from rest_framework.response import Response
 from rest_framework import status
-from adminapp.models import House, Category
-from houseprojectapp.serializers import HouseSerializer
+from adminapp.models import Category
+
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -273,14 +252,7 @@ class CategoryListView(ListAPIView):
 
 
 
-#view houses
-from rest_framework.generics import ListAPIView
-from adminapp.models import CategoryImage
-from .serializers import CategoryImageSerializer
-
-class HouseListView(ListAPIView):
-    queryset = CategoryImage.objects.all()
-    serializer_class = CategoryImageSerializer
+#
 
 
 #view product categories and products
@@ -945,93 +917,6 @@ class CartCreateView(APIView):
 
 
 # -----------------------------
-# UPI & Card Payments
-# -----------------------------
-# class UpiPaymentView(viewsets.ModelViewSet):
-#     serializer_class = UpiPaymentSerializer
-#     http_method_names = ['post']
-
-#     def create(self, request, *args, **kwargs):
-#         booking_id = request.data.get("booking_id")
-#         upi_id = request.data.get("upi_id")
-#         if not booking_id or not upi_id:
-#             return Response({"message": "Booking ID and UPI ID required"}, 400)
-
-#         booking = get_object_or_404(ProductBookings, id=booking_id)
-
-#         if Upi.objects.filter(booking=booking).exists():
-#             return Response({"message": "Payment already exists"}, 400)
-
-#         upi_payment = Upi.objects.create(booking=booking, upi_id=upi_id, status="success")
-#         booking.status = "paid"
-#         booking.save()
-#         serializer = UpiPaymentSerializer(upi_payment)
-#         return Response({"status": "success", "data": serializer.data}, 201)
-
-
-# class CardPaymentView(viewsets.ModelViewSet):
-#     serializer_class = CardSerializer
-#     http_method_names = ['post']
-
-#     def create(self, request, *args, **kwargs):
-#         booking_id = request.data.get("booking_id")
-#         booking = get_object_or_404(ProductBookings, id=booking_id)
-
-#         if Card.objects.filter(booking=booking).exists():
-#             return Response({"message": "Payment already exists"}, 400)
-
-#         card_payment = Card.objects.create(
-#             booking=booking,
-#             card_holder_name=request.data.get("card_holder_name"),
-#             card_number=request.data.get("card_number")[-4:],  # last 4 digits
-#             expiry_date=request.data.get("expiry_date"),
-#             cvv=request.data.get("cvv"),
-#             status="success"
-#         )
-
-#         booking.status = "paid"
-#         booking.save()
-#         serializer = CardSerializer(card_payment)
-#         return Response({"status": "success", "data": serializer.data}, 201)
-
-
-
-# -----------------------------
-# Cart Summary View
-# -----------------------------
-# views.py
-# from rest_framework import viewsets
-# from rest_framework.response import Response
-# from decimal import Decimal
-# from .models import Cart, tbl_register
-
-# class CartSummaryView(viewsets.ViewSet):
-#     def list(self, request, user_id=None):
-#         if not user_id:
-#             return Response({"status": "failed", "message": "User ID is required"}, status=400)
-
-#         user = tbl_register.objects.filter(id=user_id).first()
-#         if not user:
-#             return Response({"status": "failed", "message": "User not found"}, status=404)
-
-#         cart_items = Cart.objects.filter(user=user, status="pending")
-#         if not cart_items.exists():
-#             return Response({"status": "failed", "message": "No items in cart"}, status=404)
-
-#         total_price = sum(item.total_price for item in cart_items)
-#         advance_fee = total_price * Decimal('0.10')
-
-#         return Response({
-#             "status": "success",
-#             "user_id": user.id,
-#             "user_name": user.name,
-#             "user_email": user.email,
-#             "user_phone_number": getattr(user, 'phone_number', ''),
-#             "total_price": f"{total_price:.2f}",
-#             "advance_fee": f"{advance_fee:.2f}"
-#         }, status=200)
-
-# -----------------------------
 # View Cart Items
 # -----------------------------
 class ViewCartItems(APIView):
@@ -1208,40 +1093,6 @@ class CartPaymentViewSet(viewsets.ModelViewSet):
             
         }, status=201)
         
-
-# from rest_framework import viewsets
-# from rest_framework.response import Response
-# from .models import ProductBookings, Cart
-# from .serializers import PaymentDetailsSerializer, CartPaymentDetailsSerializer
-
-# # -----------------------------
-# # Payment List ViewSet
-# # -----------------------------
-# class PaymentListViewSet(viewsets.ViewSet):
-#     """
-#     Returns a list of all ProductBookings with user details and total price.
-#     """
-
-#     def list(self, request):
-#         # Optional: filter by user_id if passed in query params
-#         user_id = request.query_params.get('user_id', None)
-
-#         if user_id:
-#             bookings = ProductBookings.objects.filter(user_id=user_id)
-#             cart_items = Cart.objects.filter(user_id=user_id)
-#         else:
-#             bookings = ProductBookings.objects.all()
-#             cart_items = Cart.objects.all()
-
-#         # Serialize bookings
-#         booking_serializer = PaymentDetailsSerializer(bookings, many=True)
-#         cart_serializer = CartPaymentDetailsSerializer(cart_items, many=True)
-
-#         return Response({
-#             "status": "success",
-#             "bookings": booking_serializer.data,
-#             "cart_items": cart_serializer.data
-#         })
 
 
 
